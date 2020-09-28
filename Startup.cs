@@ -17,21 +17,16 @@ namespace WeirdUnitGame
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddLogging(builder =>
+            {
+                builder.AddConsole()
+                    .AddDebug();
+            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -43,6 +38,8 @@ namespace WeirdUnitGame
                 KeepAliveInterval = TimeSpan.FromSeconds(120),
                 ReceiveBufferSize = 4 * 1024
             };
+
+            app.UseWebSockets(webSocketOptions);
 
             app.Use(async (context, next) =>
             {
@@ -66,18 +63,9 @@ namespace WeirdUnitGame
             });
 
             app.UseFileServer();
-
-            app.UseWebSockets(webSocketOptions);
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
         }
+
+
 
         #region Echo
         private async Task Echo(HttpContext context, WebSocket webSocket)
@@ -93,5 +81,6 @@ namespace WeirdUnitGame
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
         #endregion
+
     }
 }
