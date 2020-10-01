@@ -20,6 +20,7 @@ namespace WeirdUnitGame
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddWebSocketManager();
             services.AddLogging(builder =>
             {
                 builder.AddConsole()

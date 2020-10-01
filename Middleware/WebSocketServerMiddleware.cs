@@ -12,18 +12,19 @@ namespace WeirdUnitBE.Middleware
     public class WebSocketServerMiddleware
     {
         private readonly RequestDelegate _next;
-        private WebSocketServerManager _manager = new WebSocketServerManager();
+        private WebSocketServerManager _manager;
 
-        public WebSocketServerMiddleware(RequestDelegate next)
+        public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
             _next = next;
+            _manager = manager;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
             if (context.Request.Path == "/ws" && context.WebSockets.IsWebSocketRequest)
             {
-                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync( );
                     Console.WriteLine("WebSocket Connected");
 
                     string connId = _manager.AddSocket(webSocket);
@@ -45,7 +46,6 @@ namespace WeirdUnitBE.Middleware
                             return;
                         }
                     });
-                    //await Echo(context, webSocket);
             }
             else
             {
