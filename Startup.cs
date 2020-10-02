@@ -14,13 +14,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WeirdUnitBE.Middleware;
 
+using WeirdUnitBE.GameLogic.Tower;
+
 namespace WeirdUnitGame
 {
     public class Startup
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddWebSocketManager();
+            services.AddWebSocketManager(); // Dependency Injection
             services.AddLogging(builder =>
             {
                 builder.AddConsole()
