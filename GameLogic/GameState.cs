@@ -64,10 +64,10 @@ namespace WeirdUnitBE.GameLogic
                 tower.unitCount = rUnitCount;
                 tower.SetCoordinate_x(rX);
                 tower.SetCoordinate_y(rY);
-                //tower.type = tower.GetType().ToString().Substring();
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
 
-                Tower newTower = tower;
+                Tower newTower = GenerateRandomTower(seed++);
+                newTower.type = tower.type;
                 newTower.unitCount = rUnitCount;          
                 newTower.SetCoordinate_x(9 - rX);
                 newTower.SetCoordinate_y(9 - rY);
