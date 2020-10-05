@@ -7,8 +7,8 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
         private (int, int) Coordinates;
 
         public int unitCount = 0;
-        public int _x;
-        public int _y;
+        public int X;
+        public int Y;
 
         public string type;
 
@@ -20,13 +20,13 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
         public void SetCoordinate_x(int x)
         {
             Coordinates.Item1 = x;
-            _x = x;
+            X = x;
         }
 
         public void SetCoordinate_y(int y)
         {
             Coordinates.Item2 = y;
-            _y = y;
+            Y = y;
         }
     }
 }
