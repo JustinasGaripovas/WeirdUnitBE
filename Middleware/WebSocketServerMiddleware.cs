@@ -36,7 +36,7 @@ namespace WeirdUnitBE.Middleware
                 Console.WriteLine("WebSocket Connected");
                 
                 string connId = _manager.AddSocket(webSocket); 
-                var connectionInfo = new {command = "ConnID", _connId=connId };
+                var connectionInfo = new {command = "ConnID", payload=connId };
                 var jsonMessage = JsonConvert.SerializeObject(connectionInfo, Formatting.Indented);
                 var buffer = Encoding.UTF8.GetBytes(jsonMessage);
 
