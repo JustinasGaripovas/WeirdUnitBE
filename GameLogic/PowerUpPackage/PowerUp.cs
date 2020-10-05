@@ -1,5 +1,5 @@
 
-namespace WeirdUnitBE.GameLogic.PowerUp
+namespace WeirdUnitBE.GameLogic.PowerUpPackage
 {
     abstract class PowerUp
     {

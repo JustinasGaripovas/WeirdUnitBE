@@ -1,6 +1,6 @@
 using System;
 
-namespace WeirdUnitBE.GameLogic.Tower
+namespace WeirdUnitBE.GameLogic.TowerPackage
 {
     class FastAttackingTower : AttackingTower
     {

@@ -1,7 +1,7 @@
 using System;
-using WeirdUnitBE.GameLogic.PowerUp;
+using WeirdUnitBE.GameLogic.PowerUpPackage;
 
-namespace WeirdUnitBE.GameLogic.PowerUp.ConcretePowerUps
+namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
 {
     class AttackingTowerPowerUp : PowerUp
     {

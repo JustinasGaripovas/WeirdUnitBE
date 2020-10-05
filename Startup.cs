@@ -14,7 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WeirdUnitBE.Middleware;
 
-using WeirdUnitBE.GameLogic.Tower;
+using WeirdUnitBE.GameLogic.TowerPackage;
 
 namespace WeirdUnitGame
 {

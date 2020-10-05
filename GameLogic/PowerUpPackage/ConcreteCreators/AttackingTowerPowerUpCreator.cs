@@ -1,8 +1,8 @@
 using System;
-using WeirdUnitBE.GameLogic.PowerUp;
-using WeirdUnitBE.GameLogic.PowerUp.ConcretePowerUps;
+using WeirdUnitBE.GameLogic.PowerUpPackage;
+using WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps;
 
-namespace WeirdUnitBE.GameLogic.PowerUp.ConcreteCreators
+namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators
 {
     class AttackingTowerPowerUpCreator: PowerUpCreator
     {
