@@ -5,7 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
-//using Newtonsoft.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace WeirdUnitBE.Middleware
 {
@@ -24,33 +25,48 @@ namespace WeirdUnitBE.Middleware
         {
             if (context.Request.Path == "/ws" && context.WebSockets.IsWebSocketRequest)
             {
-                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync( );
-                    Console.WriteLine("WebSocket Connected");
+                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                Console.WriteLine("WebSocket Connected");
 
-                    string connId = _manager.AddSocket(webSocket);
-                    await SendConnIDASync(webSocket, connId);
+                string connId = _manager.AddSocket(webSocket); 
 
-                    await ReceiveMessage(webSocket, async(result, buffer) =>{
-                        if(result.MessageType == WebSocketMessageType.Text)
-                        {
-                            Console.WriteLine("Message Received");
-                            Console.WriteLine($"Message: {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
-                            return;
-                        }
-                        else if(result.MessageType == WebSocketMessageType.Close)
-                        {       
-                            string id = _manager.GetAllSockets().FirstOrDefault(s => s.Value == webSocket).Key;
-                            Console.WriteLine("Received Close Message from " + id);
-                            _manager.GetAllSockets().TryRemove(id, out WebSocket removedSocket);
-                            await removedSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-                            return;
-                        }
-                    });
+                await SendConnIDASync(webSocket, connId);
+               
+                await ReceiveMessage(webSocket, async(result, buffer) =>{
+                    if(result.MessageType == WebSocketMessageType.Text)
+                    {
+                        Console.WriteLine("Message Received");
+                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        //JObject o = JObject.Parse(message);
+                        var newObject = JsonConvert.DeserializeObject<dynamic>(message);
+                        Console.WriteLine("From :" + newObject.From);
+                        Console.WriteLine($"Message: {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
+                        return;
+                    }
+                    else if(result.MessageType == WebSocketMessageType.Close)
+                    {       
+                        string id = _manager.GetAllSockets().FirstOrDefault(s => s.Value == webSocket).Key;
+                        Console.WriteLine("Received Close Message from " + id);
+                        _manager.GetAllSockets().TryRemove(id, out WebSocket removedSocket);
+                        await removedSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+                        return;
+                    }
+                });
             }
             else
             {
                 await _next(context);
             }
+        }
+        
+        private string GenerateRoomUUID()
+        {
+            Guid g = Guid.NewGuid();
+            string GuidString = Convert.ToBase64String(g.ToByteArray());
+            GuidString = GuidString.Replace("=","");
+            GuidString = GuidString.Replace("+","");
+
+            return GuidString;
         }
 
         private async Task SendConnIDASync(WebSocket socket, string connId)
