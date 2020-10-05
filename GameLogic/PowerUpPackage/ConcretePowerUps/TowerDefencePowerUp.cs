@@ -5,6 +5,10 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
 {
     class TowerDefencePowerUp : PowerUp
     {
+        public TowerDefencePowerUp()
+        {
+            type = "TowerDefencePowerUp";
+        }
         public override void printInfo()
         {
             System.Console.WriteLine("TowerDefencePowerUp Created.");

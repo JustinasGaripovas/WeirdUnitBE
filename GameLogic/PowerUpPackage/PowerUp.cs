@@ -1,8 +1,9 @@
 
 namespace WeirdUnitBE.GameLogic.PowerUpPackage
 {
-    abstract class PowerUp
+    public abstract class PowerUp
     {
+        public string type;
         public abstract void printInfo(); 
     }
 }

@@ -47,7 +47,8 @@ namespace WeirdUnitBE.Middleware
                 }
                 
                 List<Tower> allTowers = gameState.GetAllTowers().Values.ToList<Tower>();
-                var gameStateInfo = new {command = "initial", payload = new{ mapX = gameState.Get_MAP_DIMENSIONS().X, mapY = gameState.Get_MAP_DIMENSIONS().Y, _allTowers = allTowers }};
+                var gameStateInfo = new {command = "initial", payload = new{ mapX = gameState.Get_MAP_DIMENSIONS().X, mapY = gameState.Get_MAP_DIMENSIONS().Y, _allTowers = allTowers , 
+                    _allPowerUps = gameState.GetAllPowerUps()}};
                 var anotherJsonMessage = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
                 var buffer2 = Encoding.UTF8.GetBytes(anotherJsonMessage);
                 
