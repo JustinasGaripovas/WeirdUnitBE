@@ -57,18 +57,18 @@ namespace WeirdUnitBE.GameLogic
                     rY = GenerateRandomInt(0, 10, seed + 3);
                     seed++;
                 }
-
-                Tower tower = GenerateRandomTower(seed);
+                int rUnitCount = GenerateRandomInt(0, 51, seed++);
+                Tower tower = GenerateRandomTower(seed++);
                 seed++;
-                int unitCount = GenerateRandomInt(0, 51, seed++);
-                tower.unitCount = GenerateRandomInt(0, 51, seed++);
+                
+                tower.unitCount = rUnitCount;
                 tower.SetCoordinate_x(rX);
                 tower.SetCoordinate_y(rY);
                 //tower.type = tower.GetType().ToString().Substring();
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
 
-                Tower newTower = GenerateRandomTower(seed++);
-                newTower.unitCount = GenerateRandomInt(0, 51, seed++);           
+                Tower newTower = tower;
+                newTower.unitCount = rUnitCount;          
                 newTower.SetCoordinate_x(9 - rX);
                 newTower.SetCoordinate_y(9 - rY);
                 allTowers.TryAdd(newTower.GetCoordinates(), newTower);
