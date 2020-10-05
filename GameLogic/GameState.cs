@@ -60,13 +60,15 @@ namespace WeirdUnitBE.GameLogic
 
                 Tower tower = GenerateRandomTower(seed);
                 seed++;
+                int unitCount = GenerateRandomInt(0, 51, seed++);
+                tower.unitCount = GenerateRandomInt(0, 51, seed++);
                 tower.SetCoordinate_x(rX);
                 tower.SetCoordinate_y(rY);
                 //tower.type = tower.GetType().ToString().Substring();
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
 
-                Tower newTower = GenerateRandomTower(seed);
-                seed++;
+                Tower newTower = GenerateRandomTower(seed++);
+                newTower.unitCount = GenerateRandomInt(0, 51, seed++);           
                 newTower.SetCoordinate_x(9 - rX);
                 newTower.SetCoordinate_y(9 - rY);
                 allTowers.TryAdd(newTower.GetCoordinates(), newTower);

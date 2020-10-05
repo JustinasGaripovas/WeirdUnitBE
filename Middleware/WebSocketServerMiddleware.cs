@@ -46,6 +46,7 @@ namespace WeirdUnitBE.Middleware
                 if(!isGameStateInitialized && _manager.GetAllSockets().Count == 1)
                 {
                    gameState.GenerateRandomGameState(); 
+                   isGameStateInitialized = true;
                 }
                 
                 List<Tower> allTowers = gameState.GetAllTowers().Values.ToList<Tower>();
