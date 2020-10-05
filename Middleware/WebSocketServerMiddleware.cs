@@ -19,6 +19,8 @@ namespace WeirdUnitBE.Middleware
         private readonly RequestDelegate _next;
         private WebSocketServerManager _manager;
 
+        private bool isGameStateInitialized = false;
+
         private GameState gameState = new GameState();
 
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
@@ -41,7 +43,7 @@ namespace WeirdUnitBE.Middleware
                 var buffer = Encoding.UTF8.GetBytes(jsonMessage);
 
                 // Trying to send GameState info
-                if(_manager.GetAllSockets().Count == 1)
+                if(!isGameStateInitialized && _manager.GetAllSockets().Count == 1)
                 {
                    gameState.GenerateRandomGameState(); 
                 }
