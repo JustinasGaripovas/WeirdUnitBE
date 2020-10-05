@@ -12,6 +12,8 @@ namespace WeirdUnitBE.GameLogic
     {
         public readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
 
+
+
         AbstractFactory defaultTowerFactory = new DefaultTowerFactory();
         AbstractFactory strongTowerFactory = new StrongTowerFactory();
         AbstractFactory fastTowerFactory = new FastTowerFactory();
@@ -26,7 +28,7 @@ namespace WeirdUnitBE.GameLogic
 
         public void GenerateRandomGameState()
         {
-            #region Generate map 
+            #region Generate towers  
             // Generate initial user tower
             initialUser1Tower = defaultTowerFactory.CreateRegeneratingTower();
             initialUser1Tower.SetCoordinate_x(0);
@@ -46,12 +48,12 @@ namespace WeirdUnitBE.GameLogic
             for (int i = 0; i < rTowerCount; i++)
             {
                 int seed = DateTime.Now.Millisecond;
-                int rX = GenerateRandomInt(0, 10, seed);
-                int rY = GenerateRandomInt(0, 5, seed + 1);
+                int rX = GenerateRandomInt(0, 5, seed);
+                int rY = GenerateRandomInt(0, 10, seed + 1);
                 while (allTowers.ContainsKey((rX, rY)))
                 {
-                    rX = GenerateRandomInt(0, 10, seed + 2);
-                    rY = GenerateRandomInt(0, 5, seed + 3);
+                    rX = GenerateRandomInt(0, 5, seed + 2);
+                    rY = GenerateRandomInt(0, 10, seed + 3);
                     seed++;
                 }
                 Tower tower = defaultTowerFactory.CreateRegeneratingTower();
@@ -60,9 +62,10 @@ namespace WeirdUnitBE.GameLogic
                 //tower.type = tower.GetType().ToString().Substring();
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
 
-                tower.SetCoordinate_x(9 - rX);
-                tower.SetCoordinate_y(9 - rY);
-                allTowers.TryAdd(tower.GetCoordinates(), tower);
+                Tower newTower = defaultTowerFactory.CreateRegeneratingTower();
+                newTower.SetCoordinate_x(9 - rX);
+                newTower.SetCoordinate_y(9 - rY);
+                allTowers.TryAdd(newTower.GetCoordinates(), newTower);
             }
             #endregion
             // Generate random unoccupied Towers
@@ -78,6 +81,8 @@ namespace WeirdUnitBE.GameLogic
             powerUp = powerUpCreator.createPowerUp();
             allPowerUps.Add(powerUp);
         }
+
+
 
         public List<PowerUp> GetAllPowerUps()
         {

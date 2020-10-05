@@ -28,5 +28,8 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
             Coordinates.Item2 = y;
             Y = y;
         }
+
+        public int GetX(){return X;}
+        public int GetY(){return Y;}
     }
 }
