@@ -12,31 +12,49 @@ namespace WeirdUnitBE.GameLogic
         AbstractFactory strongTowerFactory = new StrongTowerFactory();
         AbstractFactory fastTowerFactory = new FastTowerFactory();
 
-        ConcurrentDictionary<(int, int), Tower> allTowers;
+        ConcurrentDictionary<(int, int), Tower> allTowers = new ConcurrentDictionary<(int, int), Tower>();
+
+        public Tower initialUser1Tower, initialUser2Tower;
 
         public GameState(){}
 
         public void GenerateRandomGameState()
         {
             // Generate initial user tower
-            Tower userDefaultRegeneratingTower = defaultTowerFactory.CreateRegeneratingTower();
-            userDefaultRegeneratingTower.SetCoordinate_x(0);
-            userDefaultRegeneratingTower.SetCoordinate_y(4);
+            initialUser1Tower = defaultTowerFactory.CreateRegeneratingTower();
+            initialUser1Tower.SetCoordinate_x(0);
+            initialUser1Tower.SetCoordinate_y(4);
+            initialUser1Tower.unitCount = 50;
 
-            int rTowerCount = GenerateRandomInt(3, 6);
+            initialUser2Tower = defaultTowerFactory.CreateRegeneratingTower();
+            initialUser2Tower.SetCoordinate_x(9-initialUser1Tower.GetCoordinates().x);
+            initialUser2Tower.SetCoordinate_y(9-initialUser1Tower.GetCoordinates().y);
+            initialUser2Tower.unitCount = 50;
+
+            allTowers.TryAdd(initialUser1Tower.GetCoordinates(), initialUser1Tower);
+            allTowers.TryAdd(initialUser2Tower.GetCoordinates(), initialUser2Tower);
+
+            int rTowerCount = GenerateRandomInt(3, 6, DateTime.Now.Millisecond);
 
             for(int i=0; i<rTowerCount; i++)
             {
-                int rX = GenerateRandomInt(0, 10);
-                int rY = GenerateRandomInt(0, 10);
+                int seed = DateTime.Now.Millisecond;
+                int rX = GenerateRandomInt(0, 10, seed);
+                int rY = GenerateRandomInt(0, 5, seed + 1);
                 while(allTowers.ContainsKey((rX, rY)))
                 {
-                    rX = GenerateRandomInt(0, 10);
-                    rY = GenerateRandomInt(0, 10);
+                    rX = GenerateRandomInt(0, 10, seed + 2);
+                    rY = GenerateRandomInt(0, 5, seed + 3);
+                    seed++;
                 }
                 Tower tower = defaultTowerFactory.CreateRegeneratingTower();
                 tower.SetCoordinate_x(rX);
                 tower.SetCoordinate_y(rY);
+                //tower.type = tower.GetType().ToString().Substring();
+                allTowers.TryAdd(tower.GetCoordinates(), tower);
+
+                tower.SetCoordinate_x(9 - rX);
+                tower.SetCoordinate_y(9 - rY);
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
             }
 
@@ -44,15 +62,20 @@ namespace WeirdUnitBE.GameLogic
             // Generate random unoccupied Towers
         }
 
-        public int GenerateRandomInt(int from, int to)
+        public int GenerateRandomInt(int from, int to, int seed)
         {
-            Random r = new Random(DateTime.Now.Millisecond);
+            Random r = new Random(seed);
             int rInt = r.Next(from, to); //for ints
             return rInt;
         }
         public (int X, int Y) Get_MAP_DIMENSIONS()
         {
             return MAP_DIMENSIONS;
+        }
+
+        public ConcurrentDictionary<(int, int), Tower> GetAllTowers()
+        {
+            return allTowers;
         }
         
     }

@@ -5,10 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WeirdUnitBE.GameLogic;
 using System.Collections;
+using WeirdUnitBE.GameLogic.TowerPackage;
 
 namespace WeirdUnitBE.Middleware
 {
@@ -29,16 +31,28 @@ namespace WeirdUnitBE.Middleware
         {
             if (context.Request.Path == "/ws" && context.WebSockets.IsWebSocketRequest)
             {
+
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 Console.WriteLine("WebSocket Connected");
-
+                
                 string connId = _manager.AddSocket(webSocket); 
                 var connectionInfo = new {command = "ConnID", _connId=connId };
                 var jsonMessage = JsonConvert.SerializeObject(connectionInfo, Formatting.Indented);
                 var buffer = Encoding.UTF8.GetBytes(jsonMessage);
-                
-                await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
 
+                // Trying to send GameState info
+                if(_manager.GetAllSockets().Count == 1)
+                {
+                   gameState.GenerateRandomGameState(); 
+                }
+                
+                List<Tower> allTowers = gameState.GetAllTowers().Values.ToList<Tower>();
+                var gameStateInfo = new {command = "initial", payload = new{_allTowers = allTowers}};
+                var anotherJsonMessage = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
+                var buffer2 = Encoding.UTF8.GetBytes(anotherJsonMessage);
+                
+                await webSocket.SendAsync(buffer2, WebSocketMessageType.Text, true, CancellationToken.None);
+                
                 //await SendJSONAsync(webSocket);
                
                 await ReceiveMessage(webSocket, async(result, buffer) =>{
@@ -46,8 +60,7 @@ namespace WeirdUnitBE.Middleware
                     {
                         Console.WriteLine("Message Received");
                         string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        //JObject o = JObject.Parse(message);
-
+                        //HandleMessage(message);
                         var newObject = JsonConvert.DeserializeObject<dynamic>(message);
                         Console.WriteLine("From :" + newObject.From);
                         Console.WriteLine($"Message: {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
@@ -68,6 +81,41 @@ namespace WeirdUnitBE.Middleware
                 await _next(context);
             }
         }
+
+        public void HandleMessage(string messageJson)
+        {
+            // Check if message is in JSON format
+            if(IsValidJson(messageJson))
+            {
+                Console.WriteLine("Json message is valid");
+            }
+        }
+
+        private bool IsValidJson(string messageJson)
+        {
+            if(string.IsNullOrWhiteSpace(messageJson))
+            {
+                Console.WriteLine("null or whitespace");
+                return false;
+            }
+            messageJson = messageJson.Trim();
+            
+            if((messageJson.StartsWith("{") && messageJson.EndsWith("}")) || // For object
+                (messageJson.StartsWith("[") && messageJson.EndsWith("]"))) // For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(messageJson);
+                    return true;
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    return false;
+                }
+            }
+            return false;
+        }
         
         private async Task SendJSONAsync(WebSocket socket)
         {
@@ -85,17 +133,6 @@ namespace WeirdUnitBE.Middleware
             GuidString = GuidString.Replace("+","");
 
             return GuidString;
-        }
-
-        private async Task SendConnIDASync(WebSocket socket, string connId)
-        {
-            var jsontowriteid = JsonConvert.SerializeObject("ConnId: " + connId, Formatting.Indented);
-            string command = "Command: connID";
-            var jsonToWritecommand = JsonConvert.SerializeObject(command, Formatting.Indented);
-
-            var buffer = Encoding.UTF8.GetBytes(jsonToWritecommand + jsontowriteid);
-
-            await socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);           
         }
 
         private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)

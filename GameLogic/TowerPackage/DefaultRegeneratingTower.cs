@@ -6,6 +6,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     {
         public DefaultRegeneratingTower()
         {
+            type = "DefaultRegeneratingTower";
             System.Console.WriteLine("DefaultRegeneratingTower Created.");
         }
     }
