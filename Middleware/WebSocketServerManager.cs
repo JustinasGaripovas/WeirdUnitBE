@@ -13,7 +13,8 @@ namespace WeirdUnitBE.Middleware
             return _sockets;
         }
 
-        public string AddSocket(WebSocket socket){
+        public string AddSocket(WebSocket socket)
+        {
             string connId = Guid.NewGuid().ToString();
             _sockets.TryAdd(connId,socket);
             Console.WriteLine("Connection Added: " + connId);
