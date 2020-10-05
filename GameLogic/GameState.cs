@@ -8,6 +8,7 @@ using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
 
 namespace WeirdUnitBE.GameLogic
 {
+    
     public class GameState
     {
         public readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
@@ -56,13 +57,16 @@ namespace WeirdUnitBE.GameLogic
                     rY = GenerateRandomInt(0, 10, seed + 3);
                     seed++;
                 }
-                Tower tower = defaultTowerFactory.CreateRegeneratingTower();
+
+                Tower tower = GenerateRandomTower(seed);
+                seed++;
                 tower.SetCoordinate_x(rX);
                 tower.SetCoordinate_y(rY);
                 //tower.type = tower.GetType().ToString().Substring();
                 allTowers.TryAdd(tower.GetCoordinates(), tower);
 
-                Tower newTower = defaultTowerFactory.CreateRegeneratingTower();
+                Tower newTower = GenerateRandomTower(seed);
+                seed++;
                 newTower.SetCoordinate_x(9 - rX);
                 newTower.SetCoordinate_y(9 - rY);
                 allTowers.TryAdd(newTower.GetCoordinates(), newTower);
@@ -82,8 +86,31 @@ namespace WeirdUnitBE.GameLogic
             allPowerUps.Add(powerUp);
         }
 
+        public Tower GenerateRandomTower(int seed)
+        {
+            int rInt = GenerateRandomInt(0, 6, seed);
 
-
+            switch(rInt)
+            {
+                case 0:
+                    return defaultTowerFactory.CreateAttackingTower();
+                break;
+                case 1:
+                    return defaultTowerFactory.CreateRegeneratingTower();
+                break;
+                case 2:
+                    return strongTowerFactory.CreateAttackingTower();
+                break;
+                case 3:
+                    return strongTowerFactory.CreateRegeneratingTower();
+                break;
+                case 4:
+                    return fastTowerFactory.CreateRegeneratingTower();
+                break;
+                default:
+                    return fastTowerFactory.CreateAttackingTower();
+            }
+        }
         public List<PowerUp> GetAllPowerUps()
         {
             return allPowerUps;

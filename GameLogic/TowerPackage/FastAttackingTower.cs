@@ -6,6 +6,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     {
         public FastAttackingTower()
         {
+            type = "FastAttackingTower";
             System.Console.WriteLine("FastAttackingTower Created.");
         }
     }
