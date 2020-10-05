@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "6a5dTJcOwm/CO+RsqxxIaoI1yMyYbCy+Zd0RQbSnfYbsQFOrZD524/rYNSYvGr6c2M8gwTSr25K6xxOKiCmxoA==",
+  "dgSpecHash": "lW8N95vWVFMlVmbnDom/c+dPzmHmFmGr78Zv9YsQEPO0U0yJGkcKHfniM6Fby4mX75wAyK6/TedxYt4nd2k3bg==",
   "success": true,
-  "projectFilePath": "D:\\Git_Repos\\WeirdUnitBE\\WeirdUnitGame.csproj",
+  "projectFilePath": "/var/www/projects/NET/WeirdUnitGame/WeirdUnitGame.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
