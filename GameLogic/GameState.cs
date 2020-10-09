@@ -1,4 +1,6 @@
 using System;
+using System.Reflection;
+using System.Linq;
 using WeirdUnitBE.GameLogic.TowerPackage;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -11,71 +13,32 @@ namespace WeirdUnitBE.GameLogic
     
     public class GameState
     {
-        public readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
+        private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
 
+        private List<Tower> allTowerList;
 
-
-        AbstractFactory defaultTowerFactory = new DefaultTowerFactory();
-        AbstractFactory strongTowerFactory = new StrongTowerFactory();
-        AbstractFactory fastTowerFactory = new FastTowerFactory();
-
-        ConcurrentDictionary<(int, int), Tower> allTowers = new ConcurrentDictionary<(int, int), Tower>(); // CIA ROKO
-
-        List<PowerUp> allPowerUps = new List<PowerUp>();
+        private List<PowerUp> allPowerUps;
 
         public Tower initialUser1Tower, initialUser2Tower;
 
-        public GameState() { }
+        public GameState() {}
 
         public void GenerateRandomGameState()
         {
-            #region Generate towers  
-            // Generate initial user tower
-            initialUser1Tower = defaultTowerFactory.CreateRegeneratingTower();
-            initialUser1Tower.SetCoordinate_x(0);
-            initialUser1Tower.SetCoordinate_y(4);
-            initialUser1Tower.unitCount = 50;
+            allTowerList = new List<Tower>();
+            allPowerUps = new List<PowerUp>();
 
-            initialUser2Tower = defaultTowerFactory.CreateRegeneratingTower();
-            initialUser2Tower.SetCoordinate_x(9 - initialUser1Tower.GetCoordinates().x);
-            initialUser2Tower.SetCoordinate_y(9 - initialUser1Tower.GetCoordinates().y);
-            initialUser2Tower.unitCount = 50;
+            AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
+            GenerateUserTowers(abstractTowerFactory); // Generate initial User towers
+            GenerateRandomTowers(abstractTowerFactory); // Generate Other random towers
 
-            allTowers.TryAdd(initialUser1Tower.GetCoordinates(), initialUser1Tower);
-            allTowers.TryAdd(initialUser2Tower.GetCoordinates(), initialUser2Tower);
+            PowerUpCreator powerUpCreator;
+            GeneratePowerUps(out powerUpCreator);
+        }
 
-            int rTowerCount = GenerateRandomInt(3, 6, DateTime.Now.Millisecond);
-
-            for (int i = 0; i < rTowerCount; i++)
-            {
-                int seed = DateTime.Now.Millisecond;
-                int rX = GenerateRandomInt(0, 5, seed);
-                int rY = GenerateRandomInt(0, 10, seed + 1);
-                while (allTowers.ContainsKey((rX, rY)))
-                {
-                    rX = GenerateRandomInt(0, 5, seed + 2);
-                    rY = GenerateRandomInt(0, 10, seed + 3);
-                    seed++;
-                }
-                int rUnitCount = GenerateRandomInt(0, 51, seed++);
-                Tower tower = GenerateRandomTower(seed++);
-                seed++;
-                
-                tower.unitCount = rUnitCount;
-                tower.SetCoordinate_x(rX);
-                tower.SetCoordinate_y(rY);
-                //tower.type = tower.GetType().ToString().Substring();
-                allTowers.TryAdd(tower.GetCoordinates(), tower);
-
-                Tower newTower = tower;
-                newTower.unitCount = rUnitCount;          
-                newTower.SetCoordinate_x(9 - rX);
-                newTower.SetCoordinate_y(9 - rY);
-                allTowers.TryAdd(newTower.GetCoordinates(), newTower);
-            }
-            #endregion
-            // Generate random unoccupied Towers
-            PowerUpCreator powerUpCreator = new AttackingTowerPowerUpCreator();
+        private void GeneratePowerUps(out PowerUpCreator powerUpCreator)
+        {
+            powerUpCreator = new AttackingTowerPowerUpCreator();
             PowerUp powerUp = powerUpCreator.createPowerUp();
             allPowerUps.Add(powerUp);
 
@@ -88,51 +51,95 @@ namespace WeirdUnitBE.GameLogic
             allPowerUps.Add(powerUp);
         }
 
-        public Tower GenerateRandomTower(int seed)
+        private void GenerateRandomTowers(AbstractFactory abstractTowerFactory)
         {
-            int rInt = GenerateRandomInt(0, 6, seed);
-
-            switch(rInt)
+            int rTowerCount = Randomizer.ReturnRandomInteger(3, 6);
+            for (int i = 0; i < rTowerCount; i++)
             {
-                case 0:
-                    return defaultTowerFactory.CreateAttackingTower();
-                break;
-                case 1:
-                    return defaultTowerFactory.CreateRegeneratingTower();
-                break;
-                case 2:
-                    return strongTowerFactory.CreateAttackingTower();
-                break;
-                case 3:
-                    return strongTowerFactory.CreateRegeneratingTower();
-                break;
-                case 4:
-                    return fastTowerFactory.CreateRegeneratingTower();
-                break;
-                default:
-                    return fastTowerFactory.CreateAttackingTower();
+                Position position = GenerateRandomPosition();
+                while(allTowerList.Where(t => t.position.X == position.X && t.position.Y == position.Y).Any())
+                {
+                    position = GenerateRandomPosition();
+                }
+
+                // Generate Random tower
+                Tower tower = GenerateRandomTower(abstractTowerFactory);
+                tower.unitCount = Randomizer.ReturnRandomInteger(0, 51);
+                tower.position = position;                
+                allTowerList.Add(tower); // cia
+
+                // Generate tower symmetric to the previous tower 
+                Tower newTower = tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
+                allTowerList.Add(newTower); // cia
             }
         }
-        public List<PowerUp> GetAllPowerUps()
+
+        private Tower GenerateRandomTower(AbstractFactory abstractFactory)
         {
-            return allPowerUps;
+            Type type = Randomizer.ReturnRandomType<Tower>(); // Generate a random type
+
+            IDictionary<Type, Tower> dictionary = new Dictionary<Type, Tower>();
+
+            abstractFactory = new DefaultTowerFactory();
+            dictionary.Add(typeof(DefaultAttackingTower), abstractFactory.CreateAttackingTower());
+            dictionary.Add(typeof(DefaultRegeneratingTower), abstractFactory.CreateRegeneratingTower());
+
+            abstractFactory = new FastTowerFactory();
+            dictionary.Add(typeof(FastAttackingTower), abstractFactory.CreateAttackingTower());
+            dictionary.Add(typeof(FastRegeneratingTower), abstractFactory.CreateRegeneratingTower());
+
+            abstractFactory = new StrongTowerFactory();
+            dictionary.Add(typeof(StrongAttackingTower), abstractFactory.CreateAttackingTower());
+            dictionary.Add(typeof(StrongRegeneratingTower), abstractFactory.CreateRegeneratingTower());
+
+            Tower randomTower = dictionary[type]; // Based on a generated random Tower type, create a new tower of that type
+
+            return (Tower)dictionary[type]; // Return randomly generated Tower       
         }
 
-        public int GenerateRandomInt(int from, int to, int seed)
+        private void GenerateUserTowers(AbstractFactory abstractFactory)
         {
-            Random r = new Random(seed);
-            int rInt = r.Next(from, to); //for ints
-            return rInt;
+            // Generate First user tower
+            abstractFactory = new DefaultTowerFactory();
+            initialUser1Tower = abstractFactory.CreateRegeneratingTower();
+            initialUser1Tower.position = new Position(0, 4);
+            initialUser1Tower.unitCount = 50;
+
+            // Generate Second users tower (which is symmetric to First user)
+            initialUser2Tower = initialUser1Tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
+
+            // Store both towers su global List
+            allTowerList.Add(initialUser1Tower);
+            allTowerList.Add(initialUser2Tower);
+        }
+        private Position GenerateRandomPosition()
+        {
+            int x = Randomizer.ReturnRandomInteger(0, MAP_DIMENSIONS.X / 2);
+            int y = Randomizer.ReturnRandomInteger(0, MAP_DIMENSIONS.Y);
+            return new Position(x, y);
+        }
+
+
+        #region GETTERS
+
+        public List<Tower> getAllTowerList()
+        {
+            return allTowerList;
         }
         public (int X, int Y) Get_MAP_DIMENSIONS()
         {
             return MAP_DIMENSIONS;
         }
 
-        public ConcurrentDictionary<(int, int), Tower> GetAllTowers()
+        public List<PowerUp> GetAllPowerUps()
         {
-            return allTowers;
+            return allPowerUps;
         }
+        #endregion
+
+        #region SETTERS
+            
+        #endregion
 
     }
 }

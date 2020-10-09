@@ -1,25 +1,30 @@
 {
   "format": 1,
   "restore": {
-    "/var/www/projects/NET/WeirdUnitGame/WeirdUnitGame.csproj": {}
+    "D:\\Git_Repos\\WeirdUnitBE\\WeirdUnitGame.csproj": {}
   },
   "projects": {
-    "/var/www/projects/NET/WeirdUnitGame/WeirdUnitGame.csproj": {
+    "D:\\Git_Repos\\WeirdUnitBE\\WeirdUnitGame.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/var/www/projects/NET/WeirdUnitGame/WeirdUnitGame.csproj",
+        "projectUniqueName": "D:\\Git_Repos\\WeirdUnitBE\\WeirdUnitGame.csproj",
         "projectName": "WeirdUnitGame",
-        "projectPath": "/var/www/projects/NET/WeirdUnitGame/WeirdUnitGame.csproj",
-        "packagesPath": "/home/justin/.nuget/packages/",
-        "outputPath": "/var/www/projects/NET/WeirdUnitGame/obj/",
+        "projectPath": "D:\\Git_Repos\\WeirdUnitBE\\WeirdUnitGame.csproj",
+        "packagesPath": "C:\\Users\\Rokas\\.nuget\\packages\\",
+        "outputPath": "D:\\Git_Repos\\WeirdUnitBE\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
         "configFilePaths": [
-          "/home/justin/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Rokas\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.1"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -59,7 +64,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/3.1.401/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.402\\RuntimeIdentifierGraph.json"
         }
       }
     }

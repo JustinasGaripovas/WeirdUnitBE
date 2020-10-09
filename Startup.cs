@@ -30,12 +30,14 @@ namespace WeirdUnitGame
             });
         }
 
-        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, /*Microsoft.AspNetCore.Hosting.IHostingEnvironment env,*/ ILoggerFactory loggerFactory)
         {
+            /*
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+            */
 
             #region WebSocket Configurations
             var webSocketOptions = new WebSocketOptions()
