@@ -21,10 +21,11 @@ namespace WeirdUnitBE.Middleware
 
         private bool isGameStateInitialized = false;
 
-        private GameState gameState = new GameState();
+        private GameState gameState;
 
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
+            gameState = GameState.GetInstance();
             _next = next;
             _manager = manager;
         }

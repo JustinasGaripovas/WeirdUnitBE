@@ -21,7 +21,18 @@ namespace WeirdUnitBE.GameLogic
 
         public Tower initialUser1Tower, initialUser2Tower;
 
-        public GameState() {}
+        private static GameState _instance;
+
+        private GameState() { }
+
+        public static GameState GetInstance()
+        {
+            if (_instance == null)
+            {
+                _instance = new GameState();
+            }
+            return _instance;
+        }
 
         public void GenerateRandomGameState()
         {
