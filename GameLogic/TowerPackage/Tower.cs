@@ -15,15 +15,17 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
             get { return _position; }
             set { _position = value; }
         }
-        public int _unitCount = 0;
+        private int _unitCount = 0;
         public int unitCount
         {
             get { return _unitCount; }
             set { _unitCount = value; }
         }
-        public string type;
 
-        public string _type = this.GetType().Name;
+        public string type
+        {
+            get { return this.GetType().Name; }
+        }
 
         public Tower ReturnSymmetricTower(int mapDimensionX, int mapDimensionY)
         {

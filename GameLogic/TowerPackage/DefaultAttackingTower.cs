@@ -7,7 +7,6 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     {
         public DefaultAttackingTower()
         {
-            type = "DefaultAttackingTower";
             Console.WriteLine("DefaultAttackingTower Created.");
         }     
     }
