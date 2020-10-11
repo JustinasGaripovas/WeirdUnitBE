@@ -5,7 +5,9 @@
 
 .idea
 
-obj
+obj/
+obj/Debug
+obj/Debug/netcoreapp3.1
 
 # User-specific files
 *.rsuser
