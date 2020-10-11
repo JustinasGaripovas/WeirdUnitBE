@@ -7,12 +7,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
+using WeirdUnitBE.Middleware;
 
 namespace WeirdUnitBE.GameLogic
 {
     
     public class GameState
     {
+        public Room _room;
         private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
 
         private List<Tower> allTowerList;
@@ -21,10 +23,13 @@ namespace WeirdUnitBE.GameLogic
 
         public Tower initialUser1Tower, initialUser2Tower;
 
-        private static GameState _instance;
+        //private static GameState _instance;
 
-        private GameState() { }
+        public GameState() { }
 
+        public GameState(Room _room){this._room = _room;}
+
+        /*
         public static GameState GetInstance()
         {
             if (_instance == null)
@@ -33,6 +38,7 @@ namespace WeirdUnitBE.GameLogic
             }
             return _instance;
         }
+        */
 
         public void GenerateRandomGameState()
         {
@@ -77,11 +83,11 @@ namespace WeirdUnitBE.GameLogic
                 Tower tower = GenerateRandomTower(abstractTowerFactory);
                 tower.unitCount = Randomizer.ReturnRandomInteger(0, 51);
                 tower.position = position;                
-                allTowerList.Add(tower); // cia
+                allTowerList.Add(tower);
 
                 // Generate tower symmetric to the previous tower 
                 Tower newTower = tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
-                allTowerList.Add(newTower); // cia
+                allTowerList.Add(newTower);
             }
         }
 
@@ -115,9 +121,11 @@ namespace WeirdUnitBE.GameLogic
             initialUser1Tower = abstractFactory.CreateRegeneratingTower();
             initialUser1Tower.position = new Position(0, 4);
             initialUser1Tower.unitCount = 50;
+            initialUser1Tower.owner = _room.connID1;
 
             // Generate Second users tower (which is symmetric to First user)
             initialUser2Tower = initialUser1Tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
+            initialUser2Tower.owner = _room.connID2;
 
             // Store both towers su global List
             allTowerList.Add(initialUser1Tower);
@@ -129,7 +137,6 @@ namespace WeirdUnitBE.GameLogic
             int y = Randomizer.ReturnRandomInteger(0, MAP_DIMENSIONS.Y);
             return new Position(x, y);
         }
-
 
         #region GETTERS
 
