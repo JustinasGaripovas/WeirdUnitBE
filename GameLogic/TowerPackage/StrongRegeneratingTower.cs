@@ -7,7 +7,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     {
         public StrongRegeneratingTower()
         {
-            Console.WriteLine("StrongRegeneratingTower Created.");
+            //Console.WriteLine("StrongRegeneratingTower Created.");
         }
     }
 }

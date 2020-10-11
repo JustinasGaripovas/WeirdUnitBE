@@ -8,6 +8,8 @@ namespace WeirdUnitBE.Middleware
     {
         private ConcurrentDictionary<string, WebSocket> _sockets = new ConcurrentDictionary<string, WebSocket>();
 
+        public ConcurrentDictionary<string, WebSocket> _lobbySockets = new ConcurrentDictionary<string, WebSocket>();
+
         public ConcurrentDictionary<string, WebSocket> GetAllSockets()
         {
             return _sockets;
@@ -17,6 +19,7 @@ namespace WeirdUnitBE.Middleware
         {
             string connId = Guid.NewGuid().ToString();
             _sockets.TryAdd(connId,socket);
+            _lobbySockets.TryAdd(connId, socket);
             Console.WriteLine("Connection Added: " + connId);
             return connId;     
         }

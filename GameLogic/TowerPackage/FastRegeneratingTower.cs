@@ -7,7 +7,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     {
         public FastRegeneratingTower()
         {
-            System.Console.WriteLine("FastRegeneratingTower Created.");
+            //System.Console.WriteLine("FastRegeneratingTower Created.");
         }
     }
 }

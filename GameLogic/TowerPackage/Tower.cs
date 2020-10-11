@@ -9,6 +9,12 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
     [Serializable]
     public abstract class Tower
     {
+        private string _owner = "";
+        public string owner
+        {
+            get { return _owner; }
+            set { _owner = value; }
+        }
         private Position _position;
         public Position position
         {
