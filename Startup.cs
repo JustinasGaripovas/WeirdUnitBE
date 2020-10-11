@@ -12,6 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using WeirdUnitBE.GameLogic.Services.Implementation;
+using WeirdUnitBE.GameLogic.Services.Interfaces;
 using WeirdUnitBE.Middleware;
 
 using WeirdUnitBE.GameLogic.TowerPackage;
@@ -23,6 +25,9 @@ namespace WeirdUnitGame
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddWebSocketManager(); // Dependency Injection
+            
+            services.Add(new ServiceDescriptor(typeof(IGameStateGenerator), new GameStateGenerator()));  
+            
             services.AddLogging(builder =>
             {
                 builder.AddConsole()
