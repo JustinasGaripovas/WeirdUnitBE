@@ -19,7 +19,7 @@ namespace WeirdUnitBE.GameLogic
 
         private List<Tower> allTowerList;
 
-        private List<PowerUp> allPowerUps;
+        private List<PowerUp> allPowerUpList;
 
         public Tower initialUser1Tower, initialUser2Tower;
 
@@ -27,7 +27,18 @@ namespace WeirdUnitBE.GameLogic
 
         public GameState() { }
 
-        public GameState(Room _room){this._room = _room;}
+        public GameState(List<Tower> allTowers, List<PowerUp> allPowerUps)
+        {
+            this.allTowerList = allTowers;
+            this.allPowerUpList = allPowerUps;
+            
+            
+        }
+
+        public GameState(Room _room)
+        {
+            this._room = _room;
+        }
 
         /*
         public static GameState GetInstance()
@@ -43,7 +54,7 @@ namespace WeirdUnitBE.GameLogic
         public void GenerateRandomGameState()
         {
             allTowerList = new List<Tower>();
-            allPowerUps = new List<PowerUp>();
+            allPowerUpList = new List<PowerUp>();
 
             AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
             GenerateUserTowers(abstractTowerFactory); // Generate initial User towers
@@ -57,15 +68,15 @@ namespace WeirdUnitBE.GameLogic
         {
             powerUpCreator = new AttackingTowerPowerUpCreator();
             PowerUp powerUp = powerUpCreator.createPowerUp();
-            allPowerUps.Add(powerUp);
+            allPowerUpList.Add(powerUp);
 
             powerUpCreator = new RegeneratingTowerPowerUpCreator();
             powerUp = powerUpCreator.createPowerUp();
-            allPowerUps.Add(powerUp);
+            allPowerUpList.Add(powerUp);
 
             powerUpCreator = new TowerDefencePowerUpCreator();
             powerUp = powerUpCreator.createPowerUp();
-            allPowerUps.Add(powerUp);
+            allPowerUpList.Add(powerUp);
         }
 
         private void GenerateRandomTowers(AbstractFactory abstractTowerFactory)
@@ -151,7 +162,7 @@ namespace WeirdUnitBE.GameLogic
 
         public List<PowerUp> GetAllPowerUps()
         {
-            return allPowerUps;
+            return allPowerUpList;
         }
         #endregion
 
