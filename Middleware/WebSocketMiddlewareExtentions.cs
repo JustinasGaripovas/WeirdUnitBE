@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using WeirdUnitBE.GameLogic.Services.Implementation;
 
 namespace WeirdUnitBE.Middleware
 {

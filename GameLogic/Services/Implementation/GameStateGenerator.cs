@@ -21,7 +21,7 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             GenerateUserTowers();
             GeneratePowerUps();
             
-            return  new GameState(allTowerList, allPowerUps);
+            return new GameState(allTowerList, allPowerUps);
         }
 
         private void GeneratePowerUps()

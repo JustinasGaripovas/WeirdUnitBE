@@ -30,26 +30,13 @@ namespace WeirdUnitBE.GameLogic
         public GameState(List<Tower> allTowers, List<PowerUp> allPowerUps)
         {
             this.allTowerList = allTowers;
-            this.allPowerUpList = allPowerUps;
-            
-            
+            this.allPowerUpList = allPowerUps;    
         }
 
         public GameState(Room _room)
         {
             this._room = _room;
         }
-
-        /*
-        public static GameState GetInstance()
-        {
-            if (_instance == null)
-            {
-                _instance = new GameState();
-            }
-            return _instance;
-        }
-        */
 
         public void GenerateRandomGameState()
         {

@@ -33,6 +33,16 @@ namespace WeirdUnitBE.GameLogic.TowerPackage
             get { return this.GetType().Name; }
         }
 
+        public Type GetTowerType()
+        {
+            return this.GetType();
+        }
+
+        public int GetUnitCount()
+        {
+            return _unitCount;
+        }
+
         public Tower ReturnSymmetricTower(int mapDimensionX, int mapDimensionY)
         {
             Tower symmetricTower = this.Clone<Tower>(this);
