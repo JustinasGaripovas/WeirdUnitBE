@@ -84,6 +84,7 @@ namespace WeirdUnitBE.Middleware
                         socketToRoomDict.TryRemove(currentWebSocket);
                         socketToRoomDict.TryRemove(enemyWebSocket);
                         */
+
                         _manager.GetAllSockets().TryRemove(id, out WebSocket removedSocket); // Remove socket from _sockets 
                         _manager._lobbySockets.TryRemove(id, out WebSocket removedSocket3); // Remove socket from _lobbysockets
                         
@@ -136,20 +137,33 @@ namespace WeirdUnitBE.Middleware
                 roomDict.TryAdd(room, gameState);
 
                 var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
-                
+                var currentIDBuffer = GetConnIDCommandBuffer(currentConnectionId);
+
+                await currentWebsocket.SendAsync(currentIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
                 await currentWebsocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
 
                 var enemySocket = GetEnemySocket(enemyConnectionId);
-                
+                var enemyIDBuffer = GetConnIDCommandBuffer(enemyConnectionId);
+
                 // Refactor this 
                 socketToRoomDict.TryAdd(enemySocket, room);
                 socketToRoomDict.TryAdd(currentWebsocket, room);
                 //----//
-            
+
+                await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
                 await enemySocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
 
                 ClearLobbySocket(enemyConnectionId, currentConnectionId);
             }
+        }
+
+        private static byte[] GetConnIDCommandBuffer(string connID)
+        {
+            var connIDInfo = new { command = "s:ConnID", payload = connID };
+
+            var messageJson = JsonConvert.SerializeObject(connIDInfo, Formatting.Indented);
+            return Encoding.UTF8.GetBytes(messageJson);
+
         }
 
         private WebSocket GetEnemySocket(string enemyConnectionId)
@@ -177,7 +191,7 @@ namespace WeirdUnitBE.Middleware
         {
             var gameStateInfo = new
             {
-                command = "initial", payload = new
+                command = "s:Initial", payload = new
                 {
                     roomId = roomId, mapX = gameState.Get_MAP_DIMENSIONS().X, mapY = gameState.Get_MAP_DIMENSIONS().Y,
                     allTowers = gameState.getAllTowerList(), allPowerUps = gameState.GetAllPowerUps()
