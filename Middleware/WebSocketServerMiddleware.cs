@@ -74,7 +74,8 @@ namespace WeirdUnitBE.Middleware
                     {       
                         string id = _manager.GetAllSockets().FirstOrDefault(s => s.Value == webSocket).Key; // get sockets connID
                         Console.WriteLine("Received Close Message from " + id);
-
+                        
+                        /*
                         Room roomToClose = socketToRoomDict.TryGetValue(removedSocket);
                         socketToRoomDict.TryRemove(roomToClose);
 
@@ -82,7 +83,7 @@ namespace WeirdUnitBE.Middleware
                         WebSocket enemyWebSocket = _manager.GetAllSockets().TryGetValue(roomToClose.connID2);
                         socketToRoomDict.TryRemove(currentWebSocket);
                         socketToRoomDict.TryRemove(enemyWebSocket);
-
+                        */
                         _manager.GetAllSockets().TryRemove(id, out WebSocket removedSocket); // Remove socket from _sockets 
                         _manager._lobbySockets.TryRemove(id, out WebSocket removedSocket3); // Remove socket from _lobbysockets
                         
