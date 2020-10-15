@@ -21,9 +21,11 @@ namespace WeirdUnitBE.Middleware
         private readonly RequestDelegate _next;
         private WebSocketServerManager _manager;
 
-        private ConcurrentDictionary<Room, GameState> roomDict = new ConcurrentDictionary<Room, GameState>();
-
         private ConcurrentDictionary<WebSocket, Room> socketToRoomDict = new ConcurrentDictionary<WebSocket, Room>();
+
+        private ConcurrentDictionary<string, GameState> roomIdToGamestateDict = new ConcurrentDictionary<string, GameState>();
+
+        private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
 
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
@@ -37,77 +39,49 @@ namespace WeirdUnitBE.Middleware
             {
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 Console.WriteLine("WebSocket Connected");
-                
+  
                 string enemyConnectionId = GetConnectionIdFromLobby();
-                string currentConnectionId = _manager.AddSocket(webSocket); 
+                string currentConnectionId = _manager.AddSocket(webSocket);
                 
                 await handleGameStart(enemyConnectionId, currentConnectionId, webSocket);
 
-                //Room currentRoom = WaitForEnemyConnection(currentConnectionId); // BBZ
-
-                Room currentRoom = null;
-                
-                await ReceiveMessage(webSocket, async(result, buffer) =>{
-                    if(result.MessageType == WebSocketMessageType.Text)
+                await ReceiveMessage(webSocket, async (result, buffer) =>
+                {
+                    if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        if(currentRoom == null)
-                        {
-                            currentRoom = roomDict.Keys.Where(r => r.connID1 == currentConnectionId || r.connID2 == currentConnectionId).First();
-                            System.Console.WriteLine("LOOOP ->" + currentRoom.roomID);
-                        }
+                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count); // Extract the message
+
                         Console.WriteLine("Message Received");
-                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        //HandleMessage(message);
-                        var newObject = JsonConvert.DeserializeObject<dynamic>(message);
-                        /* TEST */
-                        string command = newObject.command;
-                        HandleJsonMessage(newObject);
-
-                        /* TEST */
-
-                        //Console.WriteLine("From room :" + currentRoom.roomID); // BBZ
-
-                        Console.WriteLine($"Message: {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
+                        Console.WriteLine($"Message: {message}");
+                        
+                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message); // Convert message string to json object
+                        Room currentRoom = socketToRoomDict[webSocket]; // Get the current room
+                        HandleJsonMessage(webSocket, currentRoom, jsonObj);
+  
                         return;
                     }
-                    else if(result.MessageType == WebSocketMessageType.Close) // If socket-closed message
-                    {       
-                        string id = _manager.GetAllSockets().FirstOrDefault(s => s.Value == webSocket).Key; // get sockets connID
-                        Console.WriteLine("Received Close Message from " + id);
-                        
-                        /*
-                        Room roomToClose = socketToRoomDict.TryGetValue(removedSocket);
-                        socketToRoomDict.TryRemove(roomToClose);
+                    else if (result.MessageType == WebSocketMessageType.Close) // If socket-closed message
+                    {
+                        Console.WriteLine("Received Close Message from " + currentConnectionId);
 
-                        WebSocket currentWebSocket = _manager.GetAllSockets().TryGetValue(roomToClose.connID1);
-                        WebSocket enemyWebSocket = _manager.GetAllSockets().TryGetValue(roomToClose.connID2);
-                        socketToRoomDict.TryRemove(currentWebSocket);
-                        socketToRoomDict.TryRemove(enemyWebSocket);
-                        */
+                        _manager.GetAllSockets().TryRemove(currentConnectionId, out _); // Remove socket from _sockets 
+                        _manager._lobbySockets.TryRemove(currentConnectionId, out _); // Remove socket from _lobbysockets
 
-                        _manager.GetAllSockets().TryRemove(id, out WebSocket removedSocket); // Remove socket from _sockets 
-                        _manager._lobbySockets.TryRemove(id, out WebSocket removedSocket3); // Remove socket from _lobbysockets
-                        
 
-                        if(removedSocket.State == WebSocketState.Closed) // If socket is already closed - return;
-                        {
-                            return;
-                        }
-                        await removedSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close the socket
+                        if (webSocket.State == WebSocketState.Closed) { return; } // If socket is already closed -> return;
 
-                        Room tempRoom = (Room)roomDict.Keys.Where(room => id == room.connID1 || id == room.connID2).FirstOrDefault(); // get the room which has this connID
-                        if(tempRoom == null) // If room doesn't exist -> return
-                        {
-                            return;
-                        }
-                        Console.WriteLine("Room:" + tempRoom.roomID + " id1=" + tempRoom.connID1 + "  id2="+tempRoom.connID2);
-                        string id_2 = (id == tempRoom.connID1) ? tempRoom.connID2 : tempRoom.connID1; // get 2nd player's connID in the room 
+                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close the socket
 
-                        WebSocket removedSocket2 = _manager.GetAllSockets().FirstOrDefault(s => s.Key == id_2).Value; // get 2nd player's socket
-                        await removedSocket2.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close 2nd player's socket
+                        if (!socketToRoomDict.ContainsKey(webSocket)) { return; } // If room isn't created yet -> return
 
-                        roomDict.TryRemove(tempRoom, out GameState removedGameState); // remove room from dictionary
-                        Console.WriteLine("Room removed => " + removedGameState._room.roomID);
+                        WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket; // get enemy socket
+                        await enemySocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close enemy socket
+
+                        // Whipe all info about the room
+                        socketToRoomDict.TryRemove(webSocket, out Room removedRoom);
+                        socketToRoomDict.TryRemove(enemySocket, out _);
+                        roomIdToGamestateDict.TryRemove(removedRoom.roomID, out _);
+                        roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
 
                         return;
                     }
@@ -119,40 +93,36 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
-        private Room WaitForEnemyConnection(string connID)
-        {
-            Room room;
-            while((room = roomDict.Keys.Where(r => r.connID1 == connID || r.connID2 == connID).FirstOrDefault()) == null);
-            //Console.WriteLine(room.roomID);
-            return room;
-        }
-
         private async Task handleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
         {
             if (!IsLobbyEmpty(enemyConnectionId))
             {
-                var roomId = GenerateRoom(enemyConnectionId, currentConnectionId, out var room);
-                var gameState = GenerateGameState(room);
+                var gameState = GenerateGameState(currentConnectionId, enemyConnectionId);
 
-                roomDict.TryAdd(room, gameState);
-
-                var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
                 var currentIDBuffer = GetConnIDCommandBuffer(currentConnectionId);
-
-                await currentWebsocket.SendAsync(currentIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
-                await currentWebsocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                await currentWebsocket.SendAsync(currentIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None); // send currentId to current user
 
                 var enemySocket = GetEnemySocket(enemyConnectionId);
                 var enemyIDBuffer = GetConnIDCommandBuffer(enemyConnectionId);
+                await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None); // Send enemyId to enemy
 
                 // Refactor this 
-                socketToRoomDict.TryAdd(enemySocket, room);
-                socketToRoomDict.TryAdd(currentWebsocket, room);
-                //----//
+                var roomId = GenerateRoomUUID();
+                socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
+                socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
+                roomIdToGamestateDict.TryAdd(roomId, gameState);               
+                
+                RoomSubject roomSubject = new RoomSubject
+                (
+                    new UserSocketObserver(currentWebsocket),
+                    new UserSocketObserver(enemySocket)
+                );
+                
+                roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
 
-                await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
-                await enemySocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-
+                var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
+                await roomSubject.Broadcast(buffer);
+                
                 ClearLobbySocket(enemyConnectionId, currentConnectionId);
             }
         }
@@ -168,7 +138,7 @@ namespace WeirdUnitBE.Middleware
 
         private WebSocket GetEnemySocket(string enemyConnectionId)
         {
-            _manager._lobbySockets.TryGetValue(enemyConnectionId, out var enemySocket); // get Enemy web socket
+            WebSocket enemySocket = _manager._lobbySockets[enemyConnectionId]; // get Enemy web socket
             return enemySocket;
         }
 
@@ -191,10 +161,14 @@ namespace WeirdUnitBE.Middleware
         {
             var gameStateInfo = new
             {
-                command = "s:Initial", payload = new
+                command = "s:Initial",
+                payload = new
                 {
-                    roomId = roomId, mapX = gameState.Get_MAP_DIMENSIONS().X, mapY = gameState.Get_MAP_DIMENSIONS().Y,
-                    allTowers = gameState.getAllTowerList(), allPowerUps = gameState.GetAllPowerUps()
+                    roomId = roomId,
+                    mapX = gameState.Get_MAP_DIMENSIONS().X,
+                    mapY = gameState.Get_MAP_DIMENSIONS().Y,
+                    allTowers = gameState.getAllTowerList(),
+                    allPowerUps = gameState.GetAllPowerUps()
                 }
             };
             return gameStateInfo;
@@ -205,85 +179,78 @@ namespace WeirdUnitBE.Middleware
             return enemyConnectionId == String.Empty;
         }
 
-        private static GameState GenerateGameState(Room room)
+        private static GameState GenerateGameState(string user1, string user2)
         {
-            GameState gameState = new GameState(room);
-            gameState.GenerateRandomGameState();
+            GameState gameState = new GameState();
+            gameState.GenerateRandomGameState(user1, user2);
             return gameState;
-        }
-
-        private string GenerateRoom(string enemyConnectionId, string currentConnectionId, out Room room)
-        {
-            string roomId = GenerateRoomUUID();
-            room = new Room(currentConnectionId, enemyConnectionId, roomId);
-            return roomId;
         }
 
         private string GetConnectionIdFromLobby()
         {
-            string connId2 = String.Empty;
-            
+            string connID = String.Empty;
+
             if (_manager._lobbySockets.Count > 0)
             {
-                connId2 = _manager._lobbySockets.FirstOrDefault().Key;
-                Console.WriteLine(connId2);
+                connID = _manager._lobbySockets.FirstOrDefault().Key;
             }
 
-            return connId2;
+            return connID;
         }
 
-        public void HandleJsonMessage(Object jsonObject)
+        public async Task HandleJsonMessage(WebSocket currentSocket, Room Room, dynamic jsonObject)
         {
-            //EventDispatcher.dispatchMessage(jsonObject.command);
-            /*
-                if command == "attack"
-                jsonOb = {from(Tower), to(Tower)}
+            GameState gameState = roomIdToGamestateDict[Room.roomID];
+            var payload = jsonObject.payload;
+            if (jsonObject.command == "c:MoveTo")
+            {
+                // get Positions 
+                Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
+                Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y);
 
-                if(jsonOb.'from'.unitCount/2 > jsonOb.'to')
+                // get Towers
+                Tower towerFrom = gameState.positionToTowerDict[positionFrom];
+                Tower towerTo = gameState.positionToTowerDict[positionTo];
+
+                // VALIDATION
+                if (positionFrom == positionTo)
                 {
-                    change gameState;
-                    broadcast message('xarasho');
+                    System.Console.WriteLine("Move is invalid");
+                }
+                else if (towerFrom.owner == towerTo.owner)
+                {
+                    // Send friendly recruits                   
+                    System.Console.WriteLine("Sending friendly units...");
+                }
+                else if (towerFrom.unitCount / 2 > towerTo.unitCount)
+                {
+                    System.Console.WriteLine("Sending units...");
+                    // change gamestate
+                    roomIdToGamestateDict[Room.roomID].PerformAttack(positionFrom, positionTo, out var affectedTowers);
+                    var gameStateInfo = new
+                    {
+                        command = "s:MoveTo",
+                        payload = new { allTowers = affectedTowers }
+                    };
+                    // broadcast changes
+                    var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
+                    var buffer = Encoding.UTF8.GetBytes(messageJson);
+
+                    await roomIdToRoomsubjectDict[Room.roomID].Broadcast(buffer);
                 }
                 else
-                {
-                    broadcast message('ne xarasho, neuzkariausi towerio senelyzai')
+                {  
+                    // send error message
+                    System.Console.WriteLine("Not enough units");
                 }
-            */
-        }
 
-        public void HandleMessage(string messageJson)
-        {
-            // Check if message is in JSON format
-            if(IsValidJson(messageJson))
-            {
-                Console.WriteLine("Json message is valid");
+                return;
             }
-        }
 
-        private bool IsValidJson(string messageJson)
-        {
-            if(string.IsNullOrWhiteSpace(messageJson))
+            if (jsonObject.command == "c:UsePowerUp")
             {
-                Console.WriteLine("null or whitespace");
-                return false;
+                // Handle PowerUp command 
             }
-            messageJson = messageJson.Trim();
-            
-            if((messageJson.StartsWith("{") && messageJson.EndsWith("}")) || // For object
-                (messageJson.StartsWith("[") && messageJson.EndsWith("]"))) // For array
-            {
-                try
-                {
-                    var obj = JToken.Parse(messageJson);
-                    return true;
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                    return false;
-                }
-            }
-            return false;
         }
 
         private string GenerateRoomUUID()
@@ -295,12 +262,13 @@ namespace WeirdUnitBE.Middleware
         {
             var buffer = new byte[1024 * 4];
 
-            while(socket.State == WebSocketState.Open){
+            while (socket.State == WebSocketState.Open)
+            {
                 var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
                     cancellationToken: CancellationToken.None);
                 handleMessage(result, buffer);
             }
         }
-        
+
     }
 }

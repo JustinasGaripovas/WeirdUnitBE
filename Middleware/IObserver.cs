@@ -1,8 +1,9 @@
+using System.Threading.Tasks;
 
 namespace WeirdUnitBE.Middleware
 {
     public interface IObserver
     {
-        void Update(ISubject subject);
+        Task SendData(ISubject subject, object data);
     }
 }
