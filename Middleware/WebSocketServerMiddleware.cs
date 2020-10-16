@@ -220,36 +220,44 @@ namespace WeirdUnitBE.Middleware
             Tower towerFrom = gameState.positionToTowerDict[positionFrom];
             Tower towerTo = gameState.positionToTowerDict[positionTo];
 
+            // VALIDATION
             if (positionFrom == positionTo)
             {
-                Console.WriteLine("Move is invalid");
+                System.Console.WriteLine("Move is invalid");
             }
             else if (towerFrom.owner == towerTo.owner)
-            {                  
-                Console.WriteLine("Sending friendly units...");
-            }
-            else if (towerFrom.unitCount / 2 > towerTo.unitCount)
             {
-                Console.WriteLine("Sending units...");
-                
-                roomIdToGamestateDict[roomId].PerformAttack(positionFrom, positionTo, out var affectedTowers);
-
+                // Send friendly recruits                   
+                System.Console.WriteLine("Sending friendly units...");
+                    
+                roomIdToGamestateDict[roomId].ReinforceFriendly(positionFrom, positionTo, out var affectedTowers);
                 var gameStateInfo = new
                 {
                     command = "s:MoveTo",
                     payload = new { allTowers = affectedTowers }
                 };
-                
+                // broadcast changes
                 var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
                 var buffer = Encoding.UTF8.GetBytes(messageJson);
 
                 await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
             }
-            else
-            {  
-                System.Console.WriteLine("Not enough units");
-            }    
+            else if (true)
+            {
+                System.Console.WriteLine("Sending units...");
+                // change gamestate
+                roomIdToGamestateDict[roomId].PerformAttack(positionFrom, positionTo, out var affectedTowers);
+                var gameStateInfo = new
+                {
+                    command = "s:MoveTo",
+                    payload = new { allTowers = affectedTowers }
+                };
+                // broadcast changes
+                var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
+                var buffer = Encoding.UTF8.GetBytes(messageJson);
 
+                await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+            }   
         }
 
         private string GenerateRoomUUID()
