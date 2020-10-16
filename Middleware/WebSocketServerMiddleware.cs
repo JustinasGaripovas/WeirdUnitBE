@@ -221,8 +221,20 @@ namespace WeirdUnitBE.Middleware
                 {
                     // Send friendly recruits                   
                     System.Console.WriteLine("Sending friendly units...");
+                    
+                    roomIdToGamestateDict[Room.roomID].ReinforceFriendly(positionFrom, positionTo, out var affectedTowers);
+                    var gameStateInfo = new
+                    {
+                        command = "s:MoveTo",
+                        payload = new { allTowers = affectedTowers }
+                    };
+                    // broadcast changes
+                    var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
+                    var buffer = Encoding.UTF8.GetBytes(messageJson);
+
+                    await roomIdToRoomsubjectDict[Room.roomID].Broadcast(buffer);
                 }
-                else if (towerFrom.unitCount / 2 > towerTo.unitCount)
+                else if (true)
                 {
                     System.Console.WriteLine("Sending units...");
                     // change gamestate

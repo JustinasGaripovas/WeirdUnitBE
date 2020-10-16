@@ -146,7 +146,7 @@ namespace WeirdUnitBE.GameLogic
 
             positionToTowerDict[towerFrom.position].unitCount -= attackUnitCount; // Reduce units from attacking tower
 
-            positionToTowerDict[towerTo.position].unitCount = attackUnitCount - towerTo.unitCount; // set occupied towers new unitCount
+            positionToTowerDict[towerTo.position].unitCount = Math.Abs(towerTo.unitCount - attackUnitCount); // set occupied towers new unitCount
             positionToTowerDict[towerTo.position].owner = towerFrom.owner; // change tower's owner
             
             affectedTowers = new List<Tower>()
@@ -156,6 +156,25 @@ namespace WeirdUnitBE.GameLogic
             };
         }
 
+        public void ReinforceFriendly(Position positionFrom, Position positionTo, out List<Tower> affectedTowers)
+        {
+            Tower towerFrom = positionToTowerDict[positionFrom];
+            Tower towerTo = positionToTowerDict[positionTo];
+
+            int attackUnitCount = towerFrom.unitCount / 2;
+
+            positionToTowerDict[towerFrom.position].unitCount -= attackUnitCount; // Reduce units from attacking tower
+
+            positionToTowerDict[towerTo.position].unitCount = attackUnitCount + towerTo.unitCount; // set occupied towers new unitCount
+            positionToTowerDict[towerTo.position].owner = towerFrom.owner; // change tower's owner
+            
+            affectedTowers = new List<Tower>()
+            {
+                positionToTowerDict[towerFrom.position],
+                positionToTowerDict[towerTo.position]
+            };
+        }
+        
         #region GETTERS
 
         public List<Tower> getAllTowerList()
