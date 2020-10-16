@@ -27,6 +27,8 @@ namespace WeirdUnitBE.Middleware
 
         private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
 
+        private ConcurrentDictionary<string, JsonMessageHandler> roomIdToJsonHandler = new ConcurrentDictionary<string, JsonMessageHandler>();
+
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
             _next = next;
@@ -56,7 +58,12 @@ namespace WeirdUnitBE.Middleware
                         
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message); // Convert message string to json object
                         Room currentRoom = socketToRoomDict[webSocket]; // Get the current room
-                        HandleJsonMessage(webSocket, currentRoom, jsonObj);
+
+                        JsonMessageHandler jsonMessageHandler = new JsonMessageHandler();
+
+                        jsonMessageHandler.OnMoveToEvent += HandleOnMoveToEvent;
+
+                        await jsonMessageHandler.HandleJsonMessage(currentRoom.roomID, jsonObj);
   
                         return;
                     }
@@ -110,7 +117,7 @@ namespace WeirdUnitBE.Middleware
                 var roomId = GenerateRoomUUID();
                 socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
                 socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
-                roomIdToGamestateDict.TryAdd(roomId, gameState);               
+                roomIdToGamestateDict.TryAdd(roomId, gameState);              
                 
                 RoomSubject roomSubject = new RoomSubject
                 (
@@ -198,59 +205,51 @@ namespace WeirdUnitBE.Middleware
             return connID;
         }
 
-        public async Task HandleJsonMessage(WebSocket currentSocket, Room Room, dynamic jsonObject)
+        private async void HandleOnMoveToEvent(object sender, JsonReceivedEventArgs args)
         {
-            GameState gameState = roomIdToGamestateDict[Room.roomID];
-            var payload = jsonObject.payload;
-            if (jsonObject.command == "c:MoveTo")
+            Console.WriteLine("Handling MoveTo NOW!");
+            dynamic jsonObj = args.jsonObj;
+            string roomId = args.roomId;
+            GameState gameState = roomIdToGamestateDict[roomId];
+ 
+            var payload = jsonObj.payload;
+
+            Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
+            Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y);
+
+            Tower towerFrom = gameState.positionToTowerDict[positionFrom];
+            Tower towerTo = gameState.positionToTowerDict[positionTo];
+
+            if (positionFrom == positionTo)
             {
-                // get Positions 
-                Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
-                Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y);
-
-                // get Towers
-                Tower towerFrom = gameState.positionToTowerDict[positionFrom];
-                Tower towerTo = gameState.positionToTowerDict[positionTo];
-
-                // VALIDATION
-                if (positionFrom == positionTo)
-                {
-                    System.Console.WriteLine("Move is invalid");
-                }
-                else if (towerFrom.owner == towerTo.owner)
-                {
-                    // Send friendly recruits                   
-                    System.Console.WriteLine("Sending friendly units...");
-                }
-                else if (towerFrom.unitCount / 2 > towerTo.unitCount)
-                {
-                    System.Console.WriteLine("Sending units...");
-                    // change gamestate
-                    roomIdToGamestateDict[Room.roomID].PerformAttack(positionFrom, positionTo, out var affectedTowers);
-                    var gameStateInfo = new
-                    {
-                        command = "s:MoveTo",
-                        payload = new { allTowers = affectedTowers }
-                    };
-                    // broadcast changes
-                    var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
-                    var buffer = Encoding.UTF8.GetBytes(messageJson);
-
-                    await roomIdToRoomsubjectDict[Room.roomID].Broadcast(buffer);
-                }
-                else
-                {  
-                    // send error message
-                    System.Console.WriteLine("Not enough units");
-                }
-
-                return;
+                Console.WriteLine("Move is invalid");
             }
-
-            if (jsonObject.command == "c:UsePowerUp")
+            else if (towerFrom.owner == towerTo.owner)
+            {                  
+                Console.WriteLine("Sending friendly units...");
+            }
+            else if (towerFrom.unitCount / 2 > towerTo.unitCount)
             {
-                // Handle PowerUp command 
+                Console.WriteLine("Sending units...");
+                
+                roomIdToGamestateDict[roomId].PerformAttack(positionFrom, positionTo, out var affectedTowers);
+
+                var gameStateInfo = new
+                {
+                    command = "s:MoveTo",
+                    payload = new { allTowers = affectedTowers }
+                };
+                
+                var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
+                var buffer = Encoding.UTF8.GetBytes(messageJson);
+
+                await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
             }
+            else
+            {  
+                System.Console.WriteLine("Not enough units");
+            }    
+
         }
 
         private string GenerateRoomUUID()
