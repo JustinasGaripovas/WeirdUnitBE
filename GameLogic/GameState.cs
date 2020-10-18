@@ -12,6 +12,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
+using WeirdUnitBE.GameLogic.Strategies;
 using WeirdUnitBE.Middleware;
 
 namespace WeirdUnitBE.GameLogic
@@ -142,18 +143,25 @@ namespace WeirdUnitBE.GameLogic
             return new Position(x, y);
         }
 
-        public void PerformAttack(Position positionFrom, Position positionTo, out List<Tower> affectedTowers)
+        public void Execute(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
         {
-            Tower towerFrom = positionToTowerDict[positionFrom];
-            Tower towerTo = positionToTowerDict[positionTo];
+            IStrategy strategy;
 
-            int attackUnitCount = towerFrom.unitCount / 2;
+            if(towerFrom.owner == towerTo.owner)
+            {
+                strategy = new ReinforceStrategy();
+            }
+            else
+            {
+                strategy = new AttackStrategy();
+            }
 
-            positionToTowerDict[towerFrom.position].unitCount -= attackUnitCount; // Reduce units from attacking tower
+            strategy.ExecuteStrategy(towerFrom, towerTo, (affectedTowerFrom, affectedTowerTo) =>
+            {
+                UpdateTowers(affectedTowerFrom, affectedTowerTo);
+            });
 
-            positionToTowerDict[towerTo.position].unitCount = Math.Abs(towerTo.unitCount - attackUnitCount); // set occupied towers new unitCount
-            positionToTowerDict[towerTo.position].owner = towerFrom.owner; // change tower's owner
-            
+
             affectedTowers = new List<Tower>()
             {
                 positionToTowerDict[towerFrom.position],
@@ -161,23 +169,10 @@ namespace WeirdUnitBE.GameLogic
             };
         }
 
-        public void ReinforceFriendly(Position positionFrom, Position positionTo, out List<Tower> affectedTowers)
+        void UpdateTowers(Tower tower1, Tower tower2)
         {
-            Tower towerFrom = positionToTowerDict[positionFrom];
-            Tower towerTo = positionToTowerDict[positionTo];
-
-            int attackUnitCount = towerFrom.unitCount / 2;
-
-            positionToTowerDict[towerFrom.position].unitCount -= attackUnitCount; // Reduce units from attacking tower
-
-            positionToTowerDict[towerTo.position].unitCount = attackUnitCount + towerTo.unitCount; // set occupied towers new unitCount
-            positionToTowerDict[towerTo.position].owner = towerFrom.owner; // change tower's owner
-            
-            affectedTowers = new List<Tower>()
-            {
-                positionToTowerDict[towerFrom.position],
-                positionToTowerDict[towerTo.position]
-            };
+            positionToTowerDict[tower1.position] = tower1;
+            positionToTowerDict[tower2.position] = tower2;
         }
         
         #region GETTERS
