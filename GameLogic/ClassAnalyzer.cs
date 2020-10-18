@@ -8,57 +8,45 @@ namespace WeirdUnitBE.GameLogic
 {
     public static class ClassAnalyzer
     {
-        
-        public static List<Type> GetAllLeafClasses(Type baseClassType)
+        public static List<Type> GetAllLeafClasses(Type baseClass)
         {
-            // Get all child classes from base class
-            // and store them to childClassTypeArray
-            Type[] childClassTypeArray = Assembly.GetAssembly(baseClassType)
-                .GetTypes()
-                .Where(type => type.IsClass && !type.IsAbstract && type.IsSubclassOf(baseClassType))
-                .ToArray<Type>();
-            
-            // Check each child class if they are at the bottom of class hierarchy (Leaf nodes)
-            // If so, add the leaf class to leafClassTypeList
-            List<Type> leafClassTypeList = new List<Type>();
-            foreach(Type childClassType in childClassTypeArray)
+            List<Type> leafClassList = new List<Type>();
+
+            List<Type> hierarchyClassList = GetAllHierarchyClasses(baseClass);
+            foreach(Type type in hierarchyClassList)
             {
-                var subClassTypeArray = Assembly
-                    .GetAssembly(childClassType)
-                    .GetTypes()
-                    .Where(t => t.IsSubclassOf(childClassType))
-                    .ToArray<Type>();
-                if(subClassTypeArray.Length == 0)
+                if(!HasChildren(type))
                 {
-                    leafClassTypeList.Add(childClassType);
+                    leafClassList.Add(type);
                 }
             }
 
-            return leafClassTypeList; // return leaf classes of the class hierarchy
+            return leafClassList;
+        }
 
-            #region EXAMPLE
-                /*
-                                Tower
-                       ___________|____________
-                     /                          \  
-          AttackingTower                  RegeneratingTower
-                 |                                |
-              /  |  \                        /    |    \
-            /    |    \                   /       |       \
-        /        |       \              /         |          \
-    Default   Fast     Strong        Default     Fast         Strong
-    Attacking Attacking Attacking  Regenerating Regenerating Regenerating
-    Tower     Tower     Tower         Tower       Tower         Tower
+        private static List<Type> GetAllHierarchyClasses(Type baseClass)
+        {
+            List<Type> hierarchy = new List<Type>();
 
+            hierarchy.Add(baseClass);
+            hierarchy.AddRange(GetAllSubClasses(baseClass));
 
-        Method will return  :   DefaultAttackingTower
-                                FastAttackingTower
-                                StrongAttackingTower
-                                DefaultRegeneratingTower
-                                FastRegeneratingTower
-                                StrongRegeneratingTower
-                */
-            #endregion
+            return hierarchy;
+        }
+
+        private static List<Type> GetAllSubClasses(Type baseClass)
+        {
+            List<Type> subClasses = Assembly
+                .GetAssembly(baseClass)
+                .GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract && type.IsSubclassOf(baseClass))
+                .ToList();
+            return subClasses;
+        }
+
+        private static bool HasChildren(Type type)
+        {
+            return GetAllSubClasses(type).Any();
         }
     }
 }
