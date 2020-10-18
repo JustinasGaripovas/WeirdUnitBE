@@ -10,8 +10,11 @@ using System.Collections.Concurrent;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WeirdUnitBE.GameLogic;
+using WeirdUnitBE.Middleware.JsonHandling;
+using WeirdUnitBE.Middleware.Observable.ConcreteObservers;
+using WeirdUnitBE.Middleware.Observable.ConcreteSubjects;
 using System.Collections;
-using WeirdUnitBE.GameLogic.TowerPackage;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.Services.Implementation;
 
 namespace WeirdUnitBE.Middleware
@@ -47,6 +50,9 @@ namespace WeirdUnitBE.Middleware
                 
                 await handleGameStart(enemyConnectionId, currentConnectionId, webSocket);
 
+                JsonMessageHandler jsonHandler = new JsonMessageHandler();
+                jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
+
                 await ReceiveMessage(webSocket, async (result, buffer) =>
                 {
                     if (result.MessageType == WebSocketMessageType.Text)
@@ -59,11 +65,7 @@ namespace WeirdUnitBE.Middleware
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message); // Convert message string to json object
                         Room currentRoom = socketToRoomDict[webSocket]; // Get the current room
 
-                        JsonMessageHandler jsonMessageHandler = new JsonMessageHandler();
-
-                        jsonMessageHandler.OnMoveToEvent += HandleOnMoveToEvent;
-
-                        await jsonMessageHandler.HandleJsonMessage(currentRoom.roomID, jsonObj);
+                        await jsonHandler.HandleJsonMessage(currentRoom.roomID, jsonObj);
   
                         return;
                     }
