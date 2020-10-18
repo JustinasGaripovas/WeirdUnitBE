@@ -4,7 +4,12 @@ using System.Linq;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
 using WeirdUnitBE.GameLogic.Services.Interfaces;
-using WeirdUnitBE.GameLogic.TowerPackage;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.DefaultTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.FastTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.StrongTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Factories;
+using WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories;
 
 // ReSharper disable once CheckNamespace
 namespace WeirdUnitBE.GameLogic.Services.Implementation

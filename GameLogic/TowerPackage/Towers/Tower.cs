@@ -4,7 +4,7 @@ using System.IO;
 using WeirdUnitBE.GameLogic;
 using System.Reflection;
 
-namespace WeirdUnitBE.GameLogic.TowerPackage
+namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
     [Serializable]
     public abstract class Tower

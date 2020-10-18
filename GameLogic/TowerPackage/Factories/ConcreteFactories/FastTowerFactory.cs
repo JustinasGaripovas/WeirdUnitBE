@@ -1,7 +1,8 @@
 ﻿using System;
-using WeirdUnitBE.GameLogic.TowerPackage;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.FastTowers;
 
-namespace WeirdUnitBE.GameLogic.TowerPackage
+namespace WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories
 {
     class FastTowerFactory : AbstractFactory
     {

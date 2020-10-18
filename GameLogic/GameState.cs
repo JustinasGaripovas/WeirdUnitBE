@@ -1,7 +1,12 @@
 using System;
 using System.Reflection;
 using System.Linq;
-using WeirdUnitBE.GameLogic.TowerPackage;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.DefaultTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.FastTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers.StrongTowers;
+using WeirdUnitBE.GameLogic.TowerPackage.Factories;
+using WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

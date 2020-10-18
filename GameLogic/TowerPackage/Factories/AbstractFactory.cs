@@ -1,6 +1,7 @@
 using System;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 
-namespace WeirdUnitBE.GameLogic.TowerPackage
+namespace WeirdUnitBE.GameLogic.TowerPackage.Factories
 {
     public abstract class AbstractFactory
     {
