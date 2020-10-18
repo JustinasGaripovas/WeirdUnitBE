@@ -8,11 +8,8 @@ namespace WeirdUnitBE.GameLogic
         public readonly int X;
         public readonly int Y;
 
-        public Position(int X, int Y)
-        {
-            this.X = X;
-            this.Y = Y;
-        }
+        public Position(int X, int Y) =>
+            (this.X, this.Y) = (X, Y);
 
         public Position InvertPosition(int mapDimensionX, int mapDimensionY)
         {
