@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WeirdUnitBE.Middleware
+namespace WeirdUnitBE.Middleware.JsonHandling
 {
     public class JsonMessageHandler
     {
@@ -11,6 +11,7 @@ namespace WeirdUnitBE.Middleware
         public async Task HandleJsonMessage(string roomId, dynamic jsonObj)
         {
             JsonReceivedEventArgs args = new JsonReceivedEventArgs(roomId, jsonObj);
+            
             if(jsonObj.command == "c:MoveTo")
             {
                 await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
