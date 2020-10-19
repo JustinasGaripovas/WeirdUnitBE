@@ -9,7 +9,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
     [Serializable]
     public abstract class Tower
     {
-        private string _owner = "";
+        private string _owner = String.Empty;
         public string owner
         {
             get { return _owner; }
@@ -31,11 +31,6 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
         public string type
         {
             get { return this.GetType().Name; }
-        }
-
-        public Type GetTowerType()
-        {
-            return this.GetType();
         }
 
         public Tower ReturnSymmetricTower(int mapDimensionX, int mapDimensionY)

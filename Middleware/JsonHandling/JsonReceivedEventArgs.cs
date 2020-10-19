@@ -1,15 +1,16 @@
 using System;
+using WeirdUnitBE.Middleware;
 
 namespace WeirdUnitBE.Middleware.JsonHandling
 {
     public class JsonReceivedEventArgs : EventArgs
     {
-        public string roomId { get; set; }
+        public Room room { get; set; }
         public dynamic jsonObj { get; set; }
 
-        public JsonReceivedEventArgs(string _roomId, dynamic _jsonObj)
+        public JsonReceivedEventArgs(Room _room, dynamic _jsonObj)
         {
-            roomId = _roomId;
+            room = _room;
             jsonObj = _jsonObj;
         }
     }

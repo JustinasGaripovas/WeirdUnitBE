@@ -6,9 +6,6 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers.StrongTowers
     [Serializable]
     class StrongRegeneratingTower : RegeneratingTower
     {
-        public StrongRegeneratingTower()
-        {
-            //Console.WriteLine("StrongRegeneratingTower Created.");
-        }
+        
     }
 }
