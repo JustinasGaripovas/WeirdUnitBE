@@ -22,33 +22,25 @@ namespace WeirdUnitBE.GameLogic
     {
         private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
 
-        private List<Tower> allTowerList;
-
         public ConcurrentDictionary<Position, Tower> positionToTowerDict;
 
         private List<PowerUp> allPowerUpList;
-
-        public Tower initialUser1Tower, initialUser2Tower;
-
-        //private static GameState _instance;
 
         public GameState() { }
 
         public GameState(List<Tower> allTowers, List<PowerUp> allPowerUps)
         {
-            this.allTowerList = allTowers;
             this.allPowerUpList = allPowerUps;    
         }
 
         public void GenerateRandomGameState(string user1, string user2)
         {
-            allTowerList = new List<Tower>();
             positionToTowerDict = new ConcurrentDictionary<Position, Tower>();
             allPowerUpList = new List<PowerUp>();
 
             AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
-            GenerateUserTowers(abstractTowerFactory, user1, user2); // Generate initial User towers
-            GenerateRandomTowers(abstractTowerFactory); // Generate Other random towers
+            GenerateUserTowers(abstractTowerFactory, user1, user2);
+            GenerateRandomTowers(abstractTowerFactory);
 
             PowerUpCreator powerUpCreator;
             GeneratePowerUps(out powerUpCreator);
@@ -75,28 +67,24 @@ namespace WeirdUnitBE.GameLogic
             for (int i = 0; i < rTowerCount; i++)
             {
                 Position position = GenerateRandomPosition();
-                while(allTowerList.Where(t => t.position.X == position.X && t.position.Y == position.Y).Any())
+                while(positionToTowerDict.ContainsKey(position))
                 {
                     position = GenerateRandomPosition();
                 }
 
-                // Generate Random tower
                 Tower tower = GenerateRandomTower(abstractTowerFactory);
                 tower.unitCount = Randomizer.ReturnRandomInteger(0, 51);
                 tower.position = position;                
-                allTowerList.Add(tower);
-                positionToTowerDict.TryAdd(tower.position, tower);
-
-                // Generate tower symmetric to the previous tower 
-                Tower newTower = tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
-                allTowerList.Add(newTower);
-                positionToTowerDict.TryAdd(newTower.position, newTower);
+                
+                positionToTowerDict.TryAdd(tower.position, tower); 
+                Tower symmetricTower = tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
+                positionToTowerDict.TryAdd(symmetricTower.position, symmetricTower);
             }
         }
 
         private Tower GenerateRandomTower(AbstractFactory abstractFactory)
         {
-            Type type = Randomizer.ReturnRandomType<Tower>(); // Generate a random type
+            Type type = Randomizer.ReturnRandomType<Tower>();
 
             IDictionary<Type, Tower> dictionary = new Dictionary<Type, Tower>();
 
@@ -112,27 +100,22 @@ namespace WeirdUnitBE.GameLogic
             dictionary.Add(typeof(StrongAttackingTower), abstractFactory.CreateAttackingTower());
             dictionary.Add(typeof(StrongRegeneratingTower), abstractFactory.CreateRegeneratingTower());
 
-            Tower randomTower = dictionary[type]; // Based on a generated random Tower type, create a new tower of that type
+            Tower randomTower = dictionary[type];
 
-            return (Tower)dictionary[type]; // Return randomly generated Tower       
+            return (Tower)dictionary[type];      
         }
 
         private void GenerateUserTowers(AbstractFactory abstractFactory, string user1, string user2)
         {
-            // Generate First user tower
             abstractFactory = new DefaultTowerFactory();
-            Tower initialUser1Tower = initialUser1Tower = abstractFactory.CreateRegeneratingTower();
+            Tower initialUser1Tower = abstractFactory.CreateRegeneratingTower();
             initialUser1Tower.position = new Position(0, 4);
             initialUser1Tower.unitCount = 50;
             initialUser1Tower.owner = user1;
 
-            // Generate Second users tower (which is symmetric to First user)
             Tower initialUser2Tower = initialUser1Tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
             initialUser2Tower.owner = user2;
 
-            // Store both towers su global List
-            allTowerList.Add(initialUser1Tower);
-            allTowerList.Add(initialUser2Tower);
             positionToTowerDict.TryAdd(initialUser1Tower.position, initialUser1Tower);
             positionToTowerDict.TryAdd(initialUser2Tower.position, initialUser2Tower);
         }
@@ -176,10 +159,9 @@ namespace WeirdUnitBE.GameLogic
         }
         
         #region GETTERS
-
-        public List<Tower> getAllTowerList()
+        public List<Tower> GetAllTowers()
         {
-            return allTowerList;
+            return positionToTowerDict.Values.ToList();
         }
         public (int X, int Y) Get_MAP_DIMENSIONS()
         {
