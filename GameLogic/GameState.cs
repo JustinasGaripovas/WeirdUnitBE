@@ -32,7 +32,7 @@ namespace WeirdUnitBE.GameLogic
             this.allPowerUpList = allPowerUps;    
         }
 
-        public void Execute(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
+        public void ExecuteMoveTo(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
         {
             IMoveStrategy strategy;
 
@@ -78,7 +78,7 @@ namespace WeirdUnitBE.GameLogic
 
             List<Tower> tempTowers = new List<Tower>();
             List<Tower> myAttackingTowers = GetAllTowers().Where(tower => tower is AttackingTower && tower.owner == powerUpOwner).ToList<Tower>();
-            strategy.ExecuteStrategy(powerUp, attackingTowers, (_affectedTowers) => 
+            strategy.ExecuteStrategy(powerUp, myAttackingTowers, (_affectedTowers) => 
             {
                 tempTowers = _affectedTowers.Intersect(myAttackingTowers).ToList<Tower>();                
             });
