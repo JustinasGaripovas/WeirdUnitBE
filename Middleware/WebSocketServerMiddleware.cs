@@ -26,11 +26,8 @@ namespace WeirdUnitBE.Middleware
 
         private ConcurrentDictionary<WebSocket, Room> socketToRoomDict = new ConcurrentDictionary<WebSocket, Room>();
 
-        private ConcurrentDictionary<string, GameState> roomIdToGamestateDict = new ConcurrentDictionary<string, GameState>();
-
         private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
 
-        private ConcurrentDictionary<string, JsonMessageHandler> roomIdToJsonHandler = new ConcurrentDictionary<string, JsonMessageHandler>();
 
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
@@ -40,7 +37,7 @@ namespace WeirdUnitBE.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.Path == "/ws" && context.WebSockets.IsWebSocketRequest)
+            if (context.Request.Path == Constants.RoutingConstants.WEBSOCKET_REQUEST_PATH && context.WebSockets.IsWebSocketRequest)
             {
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 Console.WriteLine("WebSocket Connected");
@@ -57,42 +54,36 @@ namespace WeirdUnitBE.Middleware
                 {
                     if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count); // Extract the message
+                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
                         Console.WriteLine("Message Received");
                         Console.WriteLine($"Message: {message}");
 
-                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message); // Convert message string to json object
-                        Room currentRoom = socketToRoomDict[webSocket]; // Get the current room
+                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
+                        Room currentRoom = socketToRoomDict[webSocket];
 
                         await jsonHandler.HandleJsonMessage(currentRoom.roomID, jsonObj);
 
                         return;
                     }
-                    else if (result.MessageType == WebSocketMessageType.Close) // If socket-closed message
+                    else if (result.MessageType == WebSocketMessageType.Close)
                     {
                         Console.WriteLine("Received Close Message from " + currentConnectionId);
 
-                        _manager.GetAllSockets().TryRemove(currentConnectionId, out _); // Remove socket from _sockets 
-                        _manager._lobbySockets.TryRemove(currentConnectionId, out _); // Remove socket from _lobbysockets
+                        _manager.GetAllSockets().TryRemove(currentConnectionId, out _);
+                        _manager._lobbySockets.TryRemove(currentConnectionId, out _);   
 
+                        if (webSocket.State == WebSocketState.Closed) { return; }
 
-                        if (webSocket.State == WebSocketState.Closed) { return; } // If socket is already closed -> return;
+                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
 
-                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close the socket
+                        if (!socketToRoomDict.ContainsKey(webSocket)) { return; }
 
-                        if (!socketToRoomDict.ContainsKey(webSocket)) { return; } // If room isn't created yet -> return
+                        WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket;
+                        await enemySocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
 
-                        WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket; // get enemy socket
-                        await enemySocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None); // close enemy socket
-
-                        // Whipe all info about the room
-                        socketToRoomDict.TryRemove(webSocket, out Room removedRoom);
-                        socketToRoomDict.TryRemove(enemySocket, out _);
-                        roomIdToGamestateDict.TryRemove(removedRoom.roomID, out _);
-                        roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
-
-                        return;
+                        DeleteRoom(webSocket, enemySocket);
+                        return;     
                     }
                 });
             }
@@ -100,6 +91,13 @@ namespace WeirdUnitBE.Middleware
             {
                 await _next(context);
             }
+        }
+
+        public void DeleteRoom(WebSocket currentSocket, WebSocket enemySocket)
+        {
+            socketToRoomDict.TryRemove(currentSocket, out Room removedRoom);
+            socketToRoomDict.TryRemove(enemySocket, out _);
+            roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
         }
 
         private async Task handleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
@@ -116,17 +114,16 @@ namespace WeirdUnitBE.Middleware
                 await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None); // Send enemyId to enemy
 
                 // Refactor this 
-                var roomId = GenerateRoomUUID();
+                var roomId = Room.GenerateRoomUUID();
                 socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
                 socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
-                roomIdToGamestateDict.TryAdd(roomId, gameState);
-
+                
                 RoomSubject roomSubject = new RoomSubject
                 (
+                    gameState,
                     new UserSocketObserver(currentWebsocket),
                     new UserSocketObserver(enemySocket)
                 );
-
                 roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
 
                 var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
@@ -138,7 +135,7 @@ namespace WeirdUnitBE.Middleware
 
         private static byte[] GetConnIDCommandBuffer(string connID)
         {
-            var connIDInfo = new { command = "s:ConnID", payload = connID };
+            var connIDInfo = new { command = Constants.JsonCommands.ServerCommands.CONN_ID, payload = connID };
 
             var messageJson = JsonConvert.SerializeObject(connIDInfo, Formatting.Indented);
             return Encoding.UTF8.GetBytes(messageJson);
@@ -147,14 +144,14 @@ namespace WeirdUnitBE.Middleware
 
         private WebSocket GetEnemySocket(string enemyConnectionId)
         {
-            WebSocket enemySocket = _manager._lobbySockets[enemyConnectionId]; // get Enemy web socket
+            WebSocket enemySocket = _manager._lobbySockets[enemyConnectionId];
             return enemySocket;
         }
 
         private void ClearLobbySocket(string enemyConnectionId, string currentConnectionId)
         {
-            _manager._lobbySockets.TryRemove(currentConnectionId, out WebSocket removed1);
-            _manager._lobbySockets.TryRemove(enemyConnectionId, out WebSocket removed2);
+            _manager._lobbySockets.TryRemove(currentConnectionId, out _);
+            _manager._lobbySockets.TryRemove(enemyConnectionId, out _);
         }
 
         private static byte[] GetInitialGameSateCommandBuffer(string roomId, GameState gameState)
@@ -170,13 +167,13 @@ namespace WeirdUnitBE.Middleware
         {
             var gameStateInfo = new
             {
-                command = "s:Initial",
+                command = Constants.JsonCommands.ServerCommands.INITIAL,
                 payload = new
                 {
                     roomId = roomId,
                     mapX = gameState.Get_MAP_DIMENSIONS().X,
                     mapY = gameState.Get_MAP_DIMENSIONS().Y,
-                    allTowers = gameState.getAllTowerList(),
+                    allTowers = gameState.GetAllTowers(),
                     allPowerUps = gameState.GetAllPowerUps()
                 }
             };
@@ -212,7 +209,7 @@ namespace WeirdUnitBE.Middleware
             Console.WriteLine("Handling MoveTo NOW!");
             dynamic jsonObj = args.jsonObj;
             string roomId = args.roomId;
-            GameState gameState = roomIdToGamestateDict[roomId];
+            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
 
             var payload = jsonObj.payload;
 
@@ -222,10 +219,10 @@ namespace WeirdUnitBE.Middleware
             Tower towerFrom = gameState.positionToTowerDict[positionFrom];
             Tower towerTo = gameState.positionToTowerDict[positionTo];
 
-            roomIdToGamestateDict[roomId].Execute(towerFrom, towerTo, out var affectedTowers);
+            roomIdToRoomsubjectDict[roomId].gameState.Execute(towerFrom, towerTo, out var affectedTowers);
             var gameStateInfo = new
             {
-                command = "s:MoveTo",
+                command = Constants.JsonCommands.ServerCommands.MOVE_TO,
                 payload = new { allTowers = affectedTowers }
             };
 
@@ -233,11 +230,6 @@ namespace WeirdUnitBE.Middleware
             var buffer = Encoding.UTF8.GetBytes(messageJson);
 
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
-        }
-
-        private string GenerateRoomUUID()
-        {
-            return Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("=", "").Replace("+", "");
         }
 
         private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
