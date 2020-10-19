@@ -38,15 +38,10 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
             return this.GetType();
         }
 
-        public int GetUnitCount()
-        {
-            return _unitCount;
-        }
-
         public Tower ReturnSymmetricTower(int mapDimensionX, int mapDimensionY)
         {
             Tower symmetricTower = this.Clone<Tower>(this);
-            symmetricTower.position = this.position.InvertPosition(mapDimensionX, mapDimensionY);
+            symmetricTower.position = this.position.SymmetricPosition(mapDimensionX, mapDimensionY);
             return symmetricTower;
         }
         private T Clone<T>(T obj)
