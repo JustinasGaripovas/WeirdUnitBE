@@ -6,7 +6,9 @@ using System.Linq;
 
 namespace WeirdUnitBE.GameLogic
 {
-    public static class ClassAnalyzer
+    
+    
+    public static class  ClassAnalyzer
     {
         public static List<Type> GetAllLeafClasses(Type baseClass)
         {

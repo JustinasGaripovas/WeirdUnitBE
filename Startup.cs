@@ -26,7 +26,7 @@ namespace WeirdUnitGame
         {
             services.AddWebSocketManager(); // Dependency Injection
             
-            services.Add(new ServiceDescriptor(typeof(IGameStateGenerator), new GameStateGenerator()));  
+            services.Add(new ServiceDescriptor(typeof(IGameStateBuilder), new GameStateBuilder()));  
             
             services.AddLogging(builder =>
             {

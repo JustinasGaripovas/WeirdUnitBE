@@ -7,11 +7,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
+using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 
 namespace WeirdUnitBE.GameLogic.Services.Interfaces
 {
-    public interface IGameStateGenerator
+    public interface IGameStateBuilder
     {
-        GameState GenerateRandomGameState();
+        void GenerateUserTowers(string user1, string user2);
+        ConcurrentDictionary<Position, Tower> GenerateRandomTowers();
+        List<PowerUp> GeneratePowerUps();
     }
 }
