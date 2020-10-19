@@ -15,5 +15,10 @@ namespace WeirdUnitBE.Middleware
             roomID = _roomID;
             enemyWebSocket = _enemyWebSocket;  
         }
+
+        public static string GenerateRoomUUID()
+        {
+            return Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("=", "").Replace("+", "");
+        }
     }
 }
