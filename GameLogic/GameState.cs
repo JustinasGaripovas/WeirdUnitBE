@@ -21,8 +21,7 @@ namespace WeirdUnitBE.GameLogic
     public class GameState
     {
         private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
-
-        public ConcurrentDictionary<Position, Tower> positionToTowerDict;
+        public ConcurrentDictionary<Position, Tower> PositionToTowerDict { get; set; }
 
         private List<PowerUp> allPowerUpList;
 
@@ -33,101 +32,7 @@ namespace WeirdUnitBE.GameLogic
             this.allPowerUpList = allPowerUps;    
         }
 
-        public void GenerateRandomGameState(string user1, string user2)
-        {
-            positionToTowerDict = new ConcurrentDictionary<Position, Tower>();
-            allPowerUpList = new List<PowerUp>();
-
-            AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
-            GenerateUserTowers(abstractTowerFactory, user1, user2);
-            GenerateRandomTowers(abstractTowerFactory);
-
-            PowerUpCreator powerUpCreator;
-            GeneratePowerUps(out powerUpCreator);
-        }
-
-        private void GeneratePowerUps(out PowerUpCreator powerUpCreator)
-        {
-            powerUpCreator = new AttackingTowerPowerUpCreator();
-            PowerUp powerUp = powerUpCreator.createPowerUp();
-            allPowerUpList.Add(powerUp);
-
-            powerUpCreator = new RegeneratingTowerPowerUpCreator();
-            powerUp = powerUpCreator.createPowerUp();
-            allPowerUpList.Add(powerUp);
-
-            powerUpCreator = new TowerDefencePowerUpCreator();
-            powerUp = powerUpCreator.createPowerUp();
-            allPowerUpList.Add(powerUp);
-        }
-
-        private void GenerateRandomTowers(AbstractFactory abstractTowerFactory)
-        {
-            int rTowerCount = Randomizer.ReturnRandomInteger(3, 6);
-            for (int i = 0; i < rTowerCount; i++)
-            {
-                Position position = GenerateRandomPosition();
-                
-                while(positionToTowerDict.ContainsKey(position))
-                {
-                    position = GenerateRandomPosition();
-                }
-
-                Tower tower = GenerateRandomTower(abstractTowerFactory);
-                tower.unitCount = Randomizer.ReturnRandomInteger(0, 51);
-                tower.position = position;                
-                
-                positionToTowerDict.TryAdd(tower.position, tower); 
-                Tower symmetricTower = tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
-                positionToTowerDict.TryAdd(symmetricTower.position, symmetricTower);
-            }
-        }
-
-        private Tower GenerateRandomTower(AbstractFactory abstractFactory)
-        {
-            Type type = Randomizer.ReturnRandomType<Tower>();
-
-            IDictionary<Type, Tower> dictionary = new Dictionary<Type, Tower>();
-
-            abstractFactory = new DefaultTowerFactory();
-            dictionary.Add(typeof(DefaultAttackingTower), abstractFactory.CreateAttackingTower());
-            dictionary.Add(typeof(DefaultRegeneratingTower), abstractFactory.CreateRegeneratingTower());
-
-            abstractFactory = new FastTowerFactory();
-            dictionary.Add(typeof(FastAttackingTower), abstractFactory.CreateAttackingTower());
-            dictionary.Add(typeof(FastRegeneratingTower), abstractFactory.CreateRegeneratingTower());
-
-            abstractFactory = new StrongTowerFactory();
-            dictionary.Add(typeof(StrongAttackingTower), abstractFactory.CreateAttackingTower());
-            dictionary.Add(typeof(StrongRegeneratingTower), abstractFactory.CreateRegeneratingTower());
-
-            Tower randomTower = dictionary[type];
-
-            return (Tower)dictionary[type];      
-        }
-
-        private void GenerateUserTowers(AbstractFactory abstractFactory, string user1, string user2)
-        {
-            abstractFactory = new DefaultTowerFactory();
-            Tower initialUser1Tower = abstractFactory.CreateRegeneratingTower();
-            initialUser1Tower.position = new Position(0, 4);
-            initialUser1Tower.unitCount = 50;
-            initialUser1Tower.owner = user1;
-
-            Tower initialUser2Tower = initialUser1Tower.ReturnSymmetricTower(MAP_DIMENSIONS.X, MAP_DIMENSIONS.Y);
-            initialUser2Tower.owner = user2;
-
-            positionToTowerDict.TryAdd(initialUser1Tower.position, initialUser1Tower);
-            positionToTowerDict.TryAdd(initialUser2Tower.position, initialUser2Tower);
-        }
-        private Position GenerateRandomPosition()
-        {
-            int x = Randomizer.ReturnRandomInteger(0, MAP_DIMENSIONS.X / 2);
-            int y = Randomizer.ReturnRandomInteger(0, MAP_DIMENSIONS.Y);
-            return new Position(x, y);
-        }
-
-        public void ExecuteMoveTo(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
+        public void Execute(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
         {
             IMoveStrategy strategy;
 
@@ -148,8 +53,8 @@ namespace WeirdUnitBE.GameLogic
 
             affectedTowers = new List<Tower>()
             {
-                positionToTowerDict[towerFrom.position],
-                positionToTowerDict[towerTo.position]
+                PositionToTowerDict[towerFrom.position],
+                PositionToTowerDict[towerTo.position]
             };
         }
 
@@ -182,14 +87,14 @@ namespace WeirdUnitBE.GameLogic
 
         void UpdateTowers(Tower tower1, Tower tower2)
         {
-            positionToTowerDict[tower1.position] = tower1;
-            positionToTowerDict[tower2.position] = tower2;
+            PositionToTowerDict[tower1.position] = tower1;
+            PositionToTowerDict[tower2.position] = tower2;
         }
         
         #region GETTERS
         public List<Tower> GetAllTowers()
         {
-            return positionToTowerDict.Values.ToList();
+            return PositionToTowerDict.Values.ToList();
         }
         public (int X, int Y) Get_MAP_DIMENSIONS()
         {
@@ -203,7 +108,13 @@ namespace WeirdUnitBE.GameLogic
         #endregion
 
         #region SETTERS
-            
+         
+        public GameState SetAllPowerUps(List<PowerUp> newAllPowerUps)
+        {
+            this.allPowerUpList = newAllPowerUps;
+            return this;
+        }
+        
         #endregion
 
     }

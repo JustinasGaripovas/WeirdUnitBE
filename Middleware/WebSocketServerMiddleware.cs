@@ -14,6 +14,7 @@ using WeirdUnitBE.Middleware.JsonHandling;
 using WeirdUnitBE.Middleware.Observable.ConcreteObservers;
 using WeirdUnitBE.Middleware.Observable.ConcreteSubjects;
 using System.Collections;
+using WeirdUnitBE.GameLogic.Services;
 using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.Services.Implementation;
 
@@ -45,7 +46,7 @@ namespace WeirdUnitBE.Middleware
                 string enemyConnectionId = GetConnectionIdFromLobby();
                 string currentConnectionId = _manager.AddSocket(webSocket);
 
-                await handleGameStart(enemyConnectionId, currentConnectionId, webSocket);
+                await HandleGameStart(enemyConnectionId, currentConnectionId, webSocket);
 
                 JsonMessageHandler jsonHandler = new JsonMessageHandler();
                 jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
@@ -101,11 +102,12 @@ namespace WeirdUnitBE.Middleware
             roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
         }
 
-        private async Task handleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
+        private async Task HandleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
         {
             if (!IsLobbyEmpty(enemyConnectionId))
             {
-                var gameState = GenerateGameState(currentConnectionId, enemyConnectionId);
+                var gameStateDirector = new GameStateDirector(new GameStateBuilder(), currentConnectionId, enemyConnectionId );
+                var gameState = gameStateDirector.GetResult();
 
                 var currentIDBuffer = GetConnIDCommandBuffer(currentConnectionId);
                 await currentWebsocket.SendAsync(currentIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -186,13 +188,6 @@ namespace WeirdUnitBE.Middleware
             return enemyConnectionId == String.Empty;
         }
 
-        private static GameState GenerateGameState(string user1, string user2)
-        {
-            GameState gameState = new GameState();
-            gameState.GenerateRandomGameState(user1, user2);
-            return gameState;
-        }
-
         private string GetConnectionIdFromLobby()
         {
             string connID = String.Empty;
@@ -217,8 +212,8 @@ namespace WeirdUnitBE.Middleware
             Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
             Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y);
 
-            Tower towerFrom = gameState.positionToTowerDict[positionFrom];
-            Tower towerTo = gameState.positionToTowerDict[positionTo];
+            Tower towerFrom = gameState.PositionToTowerDict[positionFrom];
+            Tower towerTo = gameState.PositionToTowerDict[positionTo];
 
             roomIdToRoomsubjectDict[roomId].gameState.ExecuteMoveTo(towerFrom, towerTo, out var affectedTowers);
             var gameStateInfo = new
