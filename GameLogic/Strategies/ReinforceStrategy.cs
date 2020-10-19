@@ -6,7 +6,7 @@ using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 
 namespace WeirdUnitBE.GameLogic.Strategies
 {
-    public class ReinforceStrategy : IStrategy
+    public class ReinforceStrategy : IMoveStrategy
     {
         public void ExecuteStrategy(Tower towerFrom, Tower towerTo, Action<Tower, Tower> UpdateGamestate)
         {

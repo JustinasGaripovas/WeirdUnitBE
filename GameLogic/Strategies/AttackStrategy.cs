@@ -6,7 +6,7 @@ using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 
 namespace WeirdUnitBE.GameLogic.Strategies
 {
-    public class AttackStrategy : IStrategy
+    public class AttackStrategy : IMoveStrategy
     {
         public void ExecuteStrategy(Tower towerFrom, Tower towerTo, Action<Tower, Tower> UpdateGamestate)
         {
@@ -21,7 +21,7 @@ namespace WeirdUnitBE.GameLogic.Strategies
             }
             else if(attackUnitCount == towerTo.unitCount)
             {
-                towerTo.owner = "";
+                towerTo.owner = String.Empty;
                 towerTo.unitCount = 0;
             }
             else

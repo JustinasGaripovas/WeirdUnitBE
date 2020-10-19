@@ -32,9 +32,9 @@ namespace WeirdUnitBE.GameLogic
             this.allPowerUpList = allPowerUps;    
         }
 
-        public void Execute(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
+        public void ExecuteMoveTo(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
         {
-            IStrategy strategy;
+            IMoveStrategy strategy;
 
             if(towerFrom.owner == towerTo.owner)
             {
@@ -56,6 +56,33 @@ namespace WeirdUnitBE.GameLogic
                 PositionToTowerDict[towerFrom.position],
                 PositionToTowerDict[towerTo.position]
             };
+        }
+
+        public void ExecutePowerUp(string powerUpType, string powerUpOwner, out List<Tower> affectedTowers)
+        {
+            affectedTowers = new List<Tower>();
+            IPowerUpStrategy strategy;
+            PowerUpCreator powerUpCreator;
+            PowerUp powerUp;
+
+            switch(powerUpType)
+            {
+                case Constants.JsonCommands.ClientCommands.ATTACKING_TOWER_POWER_UP:
+                    strategy = new AttackingTowerPowerUpStrategy();
+                    powerUpCreator = new AttackingTowerPowerUpCreator();
+                    powerUp = powerUpCreator.createPowerUp();
+                break;
+                default:
+                    return;
+            }          
+
+            List<Tower> tempTowers = new List<Tower>();
+            List<Tower> myAttackingTowers = GetAllTowers().Where(tower => tower is AttackingTower && tower.owner == powerUpOwner).ToList<Tower>();
+            strategy.ExecuteStrategy(powerUp, myAttackingTowers, (_affectedTowers) => 
+            {
+                tempTowers = _affectedTowers.Intersect(myAttackingTowers).ToList<Tower>();                
+            });
+            affectedTowers = tempTowers;
         }
 
         void UpdateTowers(Tower tower1, Tower tower2)
