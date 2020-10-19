@@ -11,7 +11,7 @@ namespace WeirdUnitBE.GameLogic
         public Position(int X, int Y) =>
             (this.X, this.Y) = (X, Y);
 
-        public Position InvertPosition(int mapDimensionX, int mapDimensionY)
+        public Position SymmetricPosition(int mapDimensionX, int mapDimensionY)
         {
             return new Position(mapDimensionX - this.X - 1, mapDimensionY - this.Y - 1);
         }
