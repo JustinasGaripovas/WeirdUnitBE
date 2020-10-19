@@ -18,10 +18,17 @@ namespace WeirdUnitBE.Middleware
         public string AddSocket(WebSocket socket)
         {
             string connId = Guid.NewGuid().ToString();
-            _sockets.TryAdd(connId,socket);
-            _lobbySockets.TryAdd(connId, socket);
+
+            _sockets.TryAdd(connId, socket);
+            AddLobbySocket(connId, socket);
+
             Console.WriteLine("Connection Added: " + connId);
-            return connId;     
+            return connId;
+        }
+
+        private void AddLobbySocket(string connId, WebSocket socket)
+        {
+            _lobbySockets.TryAdd(connId, socket);
         }
     }
 }
