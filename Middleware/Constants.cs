@@ -20,6 +20,8 @@ public static class Constants
             public const string POWER_UP = "c:PowerUpClicked";
 
             public const string ATTACKING_TOWER_POWER_UP = "AttackingTowerPowerUp";
+            public const string REGENERATING_TOWER_POWER_UP = "RegeneratingTowerPowerUp";
+            public const string TOWER_DEFENCE_POWER_UP = "TowerDefencePowerUp";
         }
     }
 } 
