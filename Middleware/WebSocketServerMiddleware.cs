@@ -203,28 +203,30 @@ namespace WeirdUnitBE.Middleware
         private async void HandleOnMoveToEvent(object sender, JsonReceivedEventArgs args)
         {
             Console.WriteLine("Handling MoveTo NOW!");
+
             dynamic jsonObj = args.jsonObj;
             string roomId = args.room.roomID;
+            var payload = jsonObj.payload;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
 
-            var payload = jsonObj.payload;
-
             Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
-            Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y);
-
             Tower towerFrom = gameState.PositionToTowerDict[positionFrom];
-            Tower towerTo = gameState.PositionToTowerDict[positionTo];
 
-            roomIdToRoomsubjectDict[roomId].gameState.ExecuteMoveTo(towerFrom, towerTo, out var affectedTowers);
+            Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y); 
+            Tower towerTo = gameState.PositionToTowerDict[positionTo];
+            
+            var moveToInfo = new{towerFrom = towerFrom, towerTo = towerTo};
+
+            IGameStateExecutable executive = new MoveToExecutive();
+            var affectedTowers = executive.ExecuteCommand(moveToInfo, gameState);
+
             var gameStateInfo = new
             {
                 command = Constants.JsonCommands.ServerCommands.MOVE_TO,
                 payload = new { allTowers = affectedTowers }
             };
 
-            var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(messageJson);
-
+            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
@@ -233,11 +235,14 @@ namespace WeirdUnitBE.Middleware
             Console.WriteLine("Handling PowerUp NOW!");
             dynamic jsonObj = args.jsonObj;
             Room room = args.room;
-
             var payload = jsonObj.payload;
             string powerUpType = payload.type;
 
-            roomIdToRoomsubjectDict[room.roomID].gameState.ExecutePowerUp(powerUpType, room.currentID, out var affectedTowers);
+            GameState gameState = roomIdToRoomsubjectDict[room.roomID].gameState;  
+            var powerUpInfo = new{powerUpType = powerUpType, powerUpOwner = room.currentID};
+
+            IGameStateExecutable executive = new PowerUpExecutive();
+            var affectedTowers = executive.ExecuteCommand(powerUpInfo, gameState);
 
             var gameStateInfo = new
             {
@@ -245,9 +250,7 @@ namespace WeirdUnitBE.Middleware
                 payload = new {allTowers=affectedTowers}
             };
 
-            var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(messageJson);
-
+            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
             await roomIdToRoomsubjectDict[room.roomID].Broadcast(buffer);
         }
 
