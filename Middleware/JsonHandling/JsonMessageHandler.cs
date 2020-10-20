@@ -1,6 +1,9 @@
 using System;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using WeirdUnitBE.Middleware;
 
 namespace WeirdUnitBE.Middleware.JsonHandling
@@ -22,6 +25,13 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             {
                 await Task.Run(() => OnPowerUpEvent?.Invoke(this, args));
             }
+        }
+
+        public static object ConvertObjectToJsonBuffer(object obj)
+        {
+            var messageJson = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            var buffer = Encoding.UTF8.GetBytes(messageJson);
+            return buffer;
         }
     }
 }
