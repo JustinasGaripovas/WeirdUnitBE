@@ -17,7 +17,6 @@ using WeirdUnitBE.Middleware;
 
 namespace WeirdUnitBE.GameLogic
 {
-    
     public class GameState
     {
         private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
@@ -29,73 +28,26 @@ namespace WeirdUnitBE.GameLogic
 
         public GameState(List<Tower> allTowers, List<PowerUp> allPowerUps)
         {
-            this.allPowerUpList = allPowerUps;    
+            this.allPowerUpList = allPowerUps;
         }
 
-        public void ExecuteMoveTo(Tower towerFrom, Tower towerTo, out List<Tower> affectedTowers)
+        public void UpdateTowers(List<Tower> towers)
         {
-            IMoveStrategy strategy;
-
-            if(towerFrom.owner == towerTo.owner)
+            foreach (Tower tower in towers)
             {
-                strategy = new ReinforceStrategy();
+                PositionToTowerDict[tower.position] = tower;
             }
-            else
-            {
-                strategy = new AttackStrategy();
-            }
-
-            strategy.ExecuteStrategy(towerFrom, towerTo, (affectedTowerFrom, affectedTowerTo) =>
-            {
-                UpdateTowers(affectedTowerFrom, affectedTowerTo);
-            });
-
-
-            affectedTowers = new List<Tower>()
-            {
-                PositionToTowerDict[towerFrom.position],
-                PositionToTowerDict[towerTo.position]
-            };
         }
 
-        public void ExecutePowerUp(string powerUpType, string powerUpOwner, out List<Tower> affectedTowers)
-        {
-            affectedTowers = new List<Tower>();
-            IPowerUpStrategy strategy;
-            PowerUpCreator powerUpCreator;
-            PowerUp powerUp;
-
-            switch(powerUpType)
-            {
-                case Constants.JsonCommands.ClientCommands.ATTACKING_TOWER_POWER_UP:
-                    strategy = new AttackingTowerPowerUpStrategy();
-                    powerUpCreator = new AttackingTowerPowerUpCreator();
-                    powerUp = powerUpCreator.createPowerUp();
-                break;
-                default:
-                    return;
-            }          
-
-            List<Tower> tempTowers = new List<Tower>();
-            List<Tower> myAttackingTowers = GetAllTowers().Where(tower => tower is AttackingTower && tower.owner == powerUpOwner).ToList<Tower>();
-            strategy.ExecuteStrategy(powerUp, myAttackingTowers, (_affectedTowers) => 
-            {
-                tempTowers = _affectedTowers.Intersect(myAttackingTowers).ToList<Tower>();                
-            });
-            affectedTowers = tempTowers;
-        }
-
-        void UpdateTowers(Tower tower1, Tower tower2)
-        {
-            PositionToTowerDict[tower1.position] = tower1;
-            PositionToTowerDict[tower2.position] = tower2;
-        }
-        
         #region GETTERS
         public List<Tower> GetAllTowers()
         {
             return PositionToTowerDict.Values.ToList();
         }
+
+        public List<Tower> GetAttackingTowers() { return GetAllTowers().Where(tower => tower is AttackingTower).ToList<Tower>(); }
+        public List<Tower> GetRegeneratingTowers() { return GetAllTowers().Where(tower => tower is RegeneratingTower).ToList<Tower>(); }
+
         public (int X, int Y) Get_MAP_DIMENSIONS()
         {
             return MAP_DIMENSIONS;
@@ -108,14 +60,13 @@ namespace WeirdUnitBE.GameLogic
         #endregion
 
         #region SETTERS
-         
+
         public GameState SetAllPowerUps(List<PowerUp> newAllPowerUps)
         {
             this.allPowerUpList = newAllPowerUps;
             return this;
         }
-        
-        #endregion
 
+        #endregion
     }
 }
