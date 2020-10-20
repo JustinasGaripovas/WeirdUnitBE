@@ -3,11 +3,12 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using WeirdUnitBE.GameLogic;
 using System.Reflection;
+using WeirdUnitBE.GameLogic.Services.Interfaces;
 
 namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
     [Serializable]
-    public abstract class Tower
+    public abstract class Tower : IPrototype
     {
         private string _owner = String.Empty;
         public string owner
@@ -35,19 +36,28 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 
         public Tower ReturnSymmetricTower(int mapDimensionX, int mapDimensionY)
         {
-            Tower symmetricTower = this.Clone<Tower>(this);
+            Tower symmetricTower = this.Clone();
             symmetricTower.position = this.position.SymmetricPosition(mapDimensionX, mapDimensionY);
             return symmetricTower;
         }
-        private T Clone<T>(T obj)
+
+        public Tower Clone()
         {
-            using (var stream = new MemoryStream())
-            {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(stream, obj);
-                stream.Position = 0;
-                return (T)formatter.Deserialize(stream);
-            };
+            Tower newTower = (Tower)this.MemberwiseClone();
+            newTower.owner = String.Copy(this.owner);
+            newTower.position = new Position(this.position.X, this.position.Y);
+            return newTower;
         }
+
+        //private T Clone<T>(T obj)
+        //{
+        //    using (var stream = new MemoryStream())
+        //    {
+        //        var formatter = new BinaryFormatter();
+        //        formatter.Serialize(stream, obj);
+        //        stream.Position = 0;
+        //        return (T)formatter.Deserialize(stream);
+        //    };
+        //}
     }
 }
