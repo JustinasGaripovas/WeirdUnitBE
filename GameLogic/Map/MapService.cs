@@ -126,6 +126,11 @@ namespace WeirdUnitBE.GameLogic.Map
 
         public static List<Position> GetDefaultMap()
         {
+            return GetDefaultMapConnections().Keys.ToList();
+        }
+        
+        public static List<Position> GetDefaultMapWithoutInitialTowers()
+        {
             List<Position> allTowerPositions = GetDefaultMapConnections().Keys.ToList();
             allTowerPositions.Remove(initialTowerPosition);
             allTowerPositions.Remove(initialEnemyTowerPosition);

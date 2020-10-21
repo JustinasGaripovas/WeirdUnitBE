@@ -56,7 +56,7 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
         {
             AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
             
-            foreach (Position position in MapService.GetDefaultMap())
+            foreach (Position position in MapService.GetDefaultMapWithoutInitialTowers())
             {
                 Tower tower = abstractTowerFactory.CreateRegeneratingTower();
                 tower.position = position;
