@@ -8,7 +8,6 @@ using WeirdUnitBE.GameLogic.Services.Interfaces;
 
 namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
-    [Serializable]
     public abstract class Tower : IPrototype
     {
         private string _owner = String.Empty;

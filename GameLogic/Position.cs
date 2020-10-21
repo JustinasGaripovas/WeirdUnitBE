@@ -2,7 +2,6 @@ using System;
 
 namespace WeirdUnitBE.GameLogic
 {
-    [Serializable]
     public class Position
     {
         public readonly int X;
