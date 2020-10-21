@@ -5,6 +5,6 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage
 {
     abstract class PowerUpCreator
     {
-        public abstract PowerUp createPowerUp();
+        public abstract PowerUp CreatePowerUp();
     }
 }

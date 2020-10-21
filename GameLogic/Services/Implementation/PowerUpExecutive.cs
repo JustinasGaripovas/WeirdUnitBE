@@ -44,7 +44,7 @@ namespace WeirdUnitBE.GameLogic
                     return null;
             }
 
-            powerUp = powerUpCreator.createPowerUp();
+            powerUp = powerUpCreator.CreatePowerUp();
             strategy.ExecuteStrategy(powerUp, targetTowers, (_affectedTowers) =>
             {
                 affectedTowers = _affectedTowers;

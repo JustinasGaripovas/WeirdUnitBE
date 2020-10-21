@@ -26,15 +26,15 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
         public List<PowerUp> GeneratePowerUps()
         {
             PowerUpCreator powerUpCreator = new AttackingTowerPowerUpCreator();
-            PowerUp powerUp = powerUpCreator.createPowerUp();
+            PowerUp powerUp = powerUpCreator.CreatePowerUp();
             allPowerUps.Add(powerUp);
 
             powerUpCreator = new RegeneratingTowerPowerUpCreator();
-            powerUp = powerUpCreator.createPowerUp();
+            powerUp = powerUpCreator.CreatePowerUp();
             allPowerUps.Add(powerUp);
 
             powerUpCreator = new TowerDefencePowerUpCreator();
-            powerUp = powerUpCreator.createPowerUp();
+            powerUp = powerUpCreator.CreatePowerUp();
             allPowerUps.Add(powerUp);
 
             return allPowerUps;

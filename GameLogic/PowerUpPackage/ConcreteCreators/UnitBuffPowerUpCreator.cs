@@ -6,7 +6,7 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators
 {
     class UnitBuffPowerUpCreator: PowerUpCreator
     {
-        public override PowerUp createPowerUp()
+        public override PowerUp CreatePowerUp()
         {
             return new UnitBuffPowerUp();
         }
