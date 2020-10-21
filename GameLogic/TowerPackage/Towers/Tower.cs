@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Text;
 using WeirdUnitBE.GameLogic;
 using System.Reflection;
 using WeirdUnitBE.GameLogic.Services.Interfaces;
@@ -44,8 +45,9 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
         public Tower Clone()
         {
             Tower newTower = (Tower)this.MemberwiseClone();
-            newTower.owner = String.Copy(this.owner);
+            newTower.owner = new StringBuilder(this.owner).ToString();
             newTower.position = new Position(this.position.X, this.position.Y);
+
             return newTower;
         }
     }
