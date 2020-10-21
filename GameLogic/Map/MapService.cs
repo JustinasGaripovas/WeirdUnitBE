@@ -98,10 +98,10 @@ namespace WeirdUnitBE.GameLogic.Map
             defaultMap[new Position(7, 7)] =
                 new Position[]
                 {
-                    new Position(7, 3),
-                    new Position(7, 7),
+                    new Position(6, 5),
+                    new Position(9, 5),
+                    new Position(9, 7),
                     new Position(5, 8),
-                    new Position(3, 4),
                 };
 
             defaultMap[new Position(5, 8)] =
