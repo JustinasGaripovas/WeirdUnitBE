@@ -13,8 +13,7 @@ namespace WeirdUnitBE.GameLogic.Services
             _gameStateBuilder = gameStateBuilder;
             
             BuildPowerUps();
-            BuildUserTowers(user1, user2);
-            BuildRandomTowers();
+            BuildTowers(user1, user2);
         }
 
         public void BuildPowerUps()
@@ -22,14 +21,9 @@ namespace WeirdUnitBE.GameLogic.Services
             result.SetAllPowerUps(_gameStateBuilder.GeneratePowerUps());
         }
 
-        public void BuildUserTowers(string user1, string user2)
+        public void BuildTowers( string user1, string user2)
         {
-            _gameStateBuilder.GenerateUserTowers(user1,user2);
-        }
-
-        public void BuildRandomTowers()
-        {
-            result.PositionToTowerDict = _gameStateBuilder.GenerateRandomTowers();
+            result.PositionToTowerDict = _gameStateBuilder.GenerateTowers(user1, user2);
         }
 
         public GameState GetResult()
