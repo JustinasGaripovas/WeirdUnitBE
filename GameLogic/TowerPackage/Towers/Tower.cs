@@ -17,7 +17,7 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
             get { return _owner; }
             set { _owner = value; }
         }
-        public List<Tower> neighbourTowers { get; set; }
+        public List<Position> neighbourTowers { get; set; }
         
         private Position _position;
         public Position position

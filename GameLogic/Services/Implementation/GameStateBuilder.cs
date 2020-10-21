@@ -74,16 +74,9 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             }
         }
 
-        private List<Tower> GetTowersFromPositions(Position rootTowerPosition)
+        private List<Position> GetTowersFromPositions(Position rootTowerPosition)
         {
-            List<Tower> towerList = new List<Tower>();
-            
-            foreach (Position pos in MapService.GetDefaultMapConnections()[rootTowerPosition])
-            {
-                towerList.Add(positionToTowerDict[pos]);
-            }
-            
-            return towerList;
+            return MapService.GetDefaultMapConnections()[rootTowerPosition].ToList();
         }
 
         private void SetInitialTower(string user, Position initialPosition)
