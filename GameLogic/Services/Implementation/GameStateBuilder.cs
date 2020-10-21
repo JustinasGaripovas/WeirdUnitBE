@@ -46,6 +46,8 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             SetInitialTower(user2, MapService.GetInitialEnemyTowerPosition());
             
             SetNeutralTowers();
+
+            SetTowerNeighbours();
             
             return positionToTowerDict;
         }
@@ -61,6 +63,27 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
                 tower.unitCount = 10;
                 positionToTowerDict.TryAdd(tower.position, tower);
             }
+        }
+
+        private void SetTowerNeighbours()
+        {
+            foreach (Position position in MapService.GetDefaultMap())
+            {
+                Tower tower = positionToTowerDict[position];
+                tower.neighbourTowers = GetTowersFromPositions(position);
+            }
+        }
+
+        private List<Tower> GetTowersFromPositions(Position rootTowerPosition)
+        {
+            List<Tower> towerList = new List<Tower>();
+            
+            foreach (Position pos in MapService.GetDefaultMapConnections()[rootTowerPosition])
+            {
+                towerList.Add(positionToTowerDict[pos]);
+            }
+            
+            return towerList;
         }
 
         private void SetInitialTower(string user, Position initialPosition)

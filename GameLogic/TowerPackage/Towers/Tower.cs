@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Text;
@@ -16,6 +17,8 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
             get { return _owner; }
             set { _owner = value; }
         }
+        public List<Tower> neighbourTowers { get; set; }
+        
         private Position _position;
         public Position position
         {
