@@ -13,8 +13,7 @@ namespace WeirdUnitBE.GameLogic.Services.Interfaces
 {
     public interface IGameStateBuilder
     {
-        void GenerateUserTowers(string user1, string user2);
-        ConcurrentDictionary<Position, Tower> GenerateRandomTowers();
+        ConcurrentDictionary<Position, Tower> GenerateTowers(string user1, string user2);
         List<PowerUp> GeneratePowerUps();
     }
 }
