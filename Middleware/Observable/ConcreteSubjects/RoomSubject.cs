@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 using WeirdUnitBE.GameLogic;
+using WeirdUnitBE.Middleware.JsonHandling;
 
 namespace WeirdUnitBE.Middleware.Observable.ConcreteSubjects
 {
@@ -11,6 +13,8 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteSubjects
     {
         private List<Object> clients;
         public GameState gameState { get; set; }
+        
+        public ConcurrentBag<Object> commandList = new ConcurrentBag<Object>();
 
         public RoomSubject(params object[] _clients)
         {

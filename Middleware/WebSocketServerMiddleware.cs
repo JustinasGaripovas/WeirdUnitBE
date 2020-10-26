@@ -29,7 +29,8 @@ namespace WeirdUnitBE.Middleware
 
         private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
 
-
+        private JsonMessageHandler jsonHandler;
+        
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
             _next = next;
@@ -47,11 +48,7 @@ namespace WeirdUnitBE.Middleware
                 string currentConnectionId = _manager.AddSocket(webSocket);
 
                 await HandleGameStart(enemyConnectionId, currentConnectionId, webSocket);
-
-                JsonMessageHandler jsonHandler = new JsonMessageHandler();
-                jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
-                jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
-
+                
                 await ReceiveMessage(webSocket, async (result, buffer) =>
                 {
                     if (result.MessageType == WebSocketMessageType.Text)
@@ -64,6 +61,7 @@ namespace WeirdUnitBE.Middleware
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
                         Room currentRoom = socketToRoomDict[webSocket];
 
+                        
                         await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
 
                         return;
@@ -127,13 +125,23 @@ namespace WeirdUnitBE.Middleware
                     new UserSocketObserver(currentWebsocket),
                     new UserSocketObserver(enemySocket)
                 );
+                
                 roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
 
+                HandleCommands(roomSubject);
+                
                 var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
                 await roomSubject.Broadcast(buffer);
 
                 ClearLobbySocket(enemyConnectionId, currentConnectionId);
             }
+        }
+
+        private void HandleCommands(RoomSubject roomSubject)
+        {
+            jsonHandler = new JsonMessageHandler(roomSubject);
+            jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
+            jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
         }
 
         private static byte[] GetConnIDCommandBuffer(string connID)
