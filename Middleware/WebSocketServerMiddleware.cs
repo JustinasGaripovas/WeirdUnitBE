@@ -210,29 +210,11 @@ namespace WeirdUnitBE.Middleware
 
         private async void HandleOnMoveToEvent(object sender, JsonReceivedEventArgs args)
         {
-            Console.WriteLine("Handling MoveTo NOW!");
-
-            dynamic jsonObj = args.jsonObj;
             string roomId = args.room.roomID;
-            var payload = jsonObj.payload;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
-
-            Position positionFrom = new Position((int)payload.moveFrom.X, (int)payload.moveFrom.Y);
-            Tower towerFrom = gameState.PositionToTowerDict[positionFrom];
-
-            Position positionTo = new Position((int)payload.moveTo.X, (int)payload.moveTo.Y); 
-            Tower towerTo = gameState.PositionToTowerDict[positionTo];
             
-            var moveToInfo = new{towerFrom = towerFrom, towerTo = towerTo};
-
             IGameStateExecutable executive = new MoveToExecutive();
-            var affectedTowers = executive.ExecuteCommand(moveToInfo, gameState);
-
-            var gameStateInfo = new
-            {
-                command = Constants.JsonCommands.ServerCommands.MOVE_TO,
-                payload = new { allTowers = affectedTowers }
-            };
+            var gameStateInfo = executive.ExecuteCommand(args, gameState);
 
             var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);

@@ -45,7 +45,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
 
         }
 
-        private async void AnalyzeCommandBag(dynamic currentCommand, JsonReceivedEventArgs args)
+        private async Task AnalyzeCommandBag(dynamic currentCommand, JsonReceivedEventArgs args)
         {
             foreach (dynamic command in _subject.commandList)
             {
