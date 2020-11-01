@@ -9,6 +9,7 @@ public static class Constants
         public static class ServerCommands
         {
             public const string MOVE_TO = "s:MoveTo";
+            public const string UNDO_MOVE_TO = "s:UndoMoveTo";
             public const string INITIAL = "s:Initial";
             public const string CONN_ID = "s:ConnID";
             public const string POWER_UP = "s:PowerUp";

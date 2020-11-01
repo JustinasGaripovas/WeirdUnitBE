@@ -6,7 +6,7 @@ using WeirdUnitBE.GameLogic.Strategies;
 
 namespace WeirdUnitBE.GameLogic
 {
-    public class MoveToExecutive : IGameStateExecutable
+    public class MoveToExecutive : IGameStateExecutable, IUndoCommand
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
@@ -31,6 +31,12 @@ namespace WeirdUnitBE.GameLogic
             return FormatCommand(affectedTowers);
         }
 
+        public object UndoCommand(dynamic args, GameState gameState)
+        {
+            //TODO: needs implementation
+            return null;
+        }
+
         private (Tower, Tower) GetTowerParameters(dynamic args, GameState gameState)
         {
             dynamic payload = args.jsonObj.payload;
@@ -49,6 +55,15 @@ namespace WeirdUnitBE.GameLogic
             return new
             {
                 command = Constants.JsonCommands.ServerCommands.MOVE_TO,
+                payload = new { allTowers = affectedTowers }
+            };
+        }
+
+        private dynamic FormatUndo(dynamic affectedTowers)
+        {
+            return new
+            {
+                command = Constants.JsonCommands.ServerCommands.UNDO_MOVE_TO,
                 payload = new { allTowers = affectedTowers }
             };
         }
