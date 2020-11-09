@@ -142,6 +142,7 @@ namespace WeirdUnitBE.Middleware
             jsonHandler = new JsonMessageHandler(roomSubject);
             jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
             jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
+            jsonHandler.UpgradeTowerEvent += HandleUpgradeEvent;
         }
 
         private static byte[] GetConnIDCommandBuffer(string connID)
@@ -215,6 +216,26 @@ namespace WeirdUnitBE.Middleware
             
             IGameStateExecutable executive = new MoveToExecutive();
             var gameStateInfo = executive.ExecuteCommand(args, gameState);
+
+            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
+            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+        }
+
+        private async void HandleUpgradeEvent(object sender, JsonReceivedEventArgs args)
+        {
+            string roomId = args.room.roomID;
+            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
+
+            var upgradeInfo = new { position = args.jsonObj.payload.position, type = args.jsonObj.payload.upgradeToType};
+
+            IGameStateExecutable executive = new UpgradeTowerExecutive();
+            var affectedTowers = executive.ExecuteCommand(upgradeInfo, gameState);
+
+            var gameStateInfo = new
+            {
+                command = Constants.JsonCommands.ServerCommands.UPGRADE_TOWER,
+                payload = new { allTowers = affectedTowers }
+            };
 
             var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);

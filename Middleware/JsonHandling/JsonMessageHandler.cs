@@ -17,6 +17,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
         private readonly JsonDiffPatch _jdp;
         public event EventHandler<JsonReceivedEventArgs> OnMoveToEvent;
         public event EventHandler<JsonReceivedEventArgs> OnPowerUpEvent;
+        public event EventHandler<JsonReceivedEventArgs> UpgradeTowerEvent;
 
         public JsonMessageHandler(RoomSubject subject)
         {
@@ -37,6 +38,13 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             if(jsonObj.command == Constants.JsonCommands.ClientCommands.MOVE_TO)
             {
                 await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
+                return;
+            }
+
+            if(jsonObj.command == Constants.JsonCommands.ClientCommands.UPGRADE_TOWER)
+            {
+                await Task.Run(() => UpgradeTowerEvent?.Invoke(this, args));
+                return;
             }
             
             await AnalyzeCommandBag(jsonObj, args);
