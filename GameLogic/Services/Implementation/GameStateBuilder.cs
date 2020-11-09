@@ -13,6 +13,8 @@ using WeirdUnitBE.GameLogic.TowerPackage.Towers.StrongTowers;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories;
 
+using WeirdUnitBE.GameLogic.Services.Implementation;
+
 // ReSharper disable once CheckNamespace
 namespace WeirdUnitBE.GameLogic.Services.Implementation
 {
@@ -59,8 +61,11 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             foreach (Position position in MapService.GetDefaultMapWithoutInitialTowers())
             {
                 Tower tower = abstractTowerFactory.CreateRegeneratingTower();
-                tower.position = position;
-                tower.unitCount = 10;
+
+                Tower neutralTowerDecorator = new NeutralTowerDecorator(tower, position);
+
+//                tower.position = position;
+//               tower.unitCount = 10;
                 positionToTowerDict.TryAdd(tower.position, tower);
             }
         }
