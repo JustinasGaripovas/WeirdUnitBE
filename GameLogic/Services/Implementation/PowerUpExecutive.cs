@@ -49,6 +49,7 @@ namespace WeirdUnitBE.GameLogic
             {
                 affectedTowers = _affectedTowers;
             });
+            
             gameState.UpdateTowers(affectedTowers);
 
             return affectedTowers;

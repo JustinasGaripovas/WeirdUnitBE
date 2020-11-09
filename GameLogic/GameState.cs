@@ -20,10 +20,10 @@ namespace WeirdUnitBE.GameLogic
     public class GameState
     {
         private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
+        public const double GAME_SPEED = 0.3;
         public ConcurrentDictionary<Position, Tower> PositionToTowerDict { get; set; }
 
         private List<PowerUp> allPowerUpList;
-
         public GameState() { }
 
         public GameState(List<Tower> allTowers, List<PowerUp> allPowerUps)

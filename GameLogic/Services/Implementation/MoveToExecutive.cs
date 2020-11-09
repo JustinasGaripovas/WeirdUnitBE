@@ -12,23 +12,18 @@ namespace WeirdUnitBE.GameLogic
         {
             (Tower towerFrom, Tower towerTo) = GetTowerParameters(args as Object, gameState);
 
-            IMoveToStrategy strategy = (towerFrom.owner == towerTo.owner) 
-                ? (IMoveToStrategy)new ReinforceStrategy() 
-                : (IMoveToStrategy)new AttackStrategy();
+            //TODO: Calculate time to move from one tower to another
+            var distance = CalculateDistance(towerTo, towerFrom);
 
-            List<Tower> affectedTowers = new List<Tower>();
-            strategy.ExecuteStrategy(towerFrom, towerTo, (affectedTowerFrom, affectedTowerTo) =>
-            {
-                affectedTowers = new List<Tower>()
-                {
-                    affectedTowerFrom,
-                    affectedTowerTo
-                };
-            });
+            int timeInSeconds = (int)(distance / GameState.GAME_SPEED);            
+            
+            return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
+        }
 
-            gameState.UpdateTowers(affectedTowers);
-
-            return FormatCommand(affectedTowers);
+        private static double CalculateDistance(Tower towerTo, Tower towerFrom)
+        {
+            return Math.Sqrt(Math.Pow(towerTo.position.Y - towerFrom.position.Y, 2) +
+                             Math.Pow(towerTo.position.X - towerFrom.position.X, 2));
         }
 
         public object UndoCommand(dynamic args, GameState gameState)
@@ -39,6 +34,7 @@ namespace WeirdUnitBE.GameLogic
 
         private (Tower, Tower) GetTowerParameters(dynamic args, GameState gameState)
         {
+            
             dynamic payload = args.jsonObj.payload;
             
             Position positionFrom = new Position((int) payload.moveFrom.X, (int) payload.moveFrom.Y);
@@ -50,12 +46,17 @@ namespace WeirdUnitBE.GameLogic
             return (towerFrom, towerTo);
         }
 
-        private dynamic FormatCommand(dynamic affectedTowers)
+        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, int unitC)
         {
             return new
             {
                 command = Constants.JsonCommands.ServerCommands.MOVE_TO,
-                payload = new { allTowers = affectedTowers }
+                payload = new
+                {
+                    position = towerToPosition,
+                    unitCount = unitC,
+                    timeToArriveInSeconds = timeInSeconds
+                }
             };
         }
 
