@@ -17,6 +17,7 @@ using System.Collections;
 using WeirdUnitBE.GameLogic.Services;
 using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.Services.Implementation;
+using WeirdUnitBE.Middleware.XmlHandling;
 
 namespace WeirdUnitBE.Middleware
 {
@@ -57,6 +58,12 @@ namespace WeirdUnitBE.Middleware
 
                         Console.WriteLine("Message Received");
                         Console.WriteLine($"Message: {message}");
+
+                        Adapter adapter = new Adapter();
+                        if(!adapter.IsJson(message))
+                        {
+                            message = adapter.ConvertToJson(message);
+                        }
 
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
                         Room currentRoom = socketToRoomDict[webSocket];

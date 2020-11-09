@@ -8,20 +8,16 @@ using System.Linq;
 
 namespace WeirdUnitBE.GameLogic.Services.Implementation
 {
-
     class NeighboursTowerDecorator : TowerDecorator
     {
-            public NeighboursTowerDecorator (Tower tower): base(tower)
-            {
-                _tower.neighbourTowers = GetTowersFromPositions();
-            }
-
-            private List<Position> GetTowersFromPositions()
-            {
-                return MapService.GetDefaultMapConnections()[_tower.position].ToList();
-            }        
+        public NeighboursTowerDecorator(Tower tower) : base(tower)
+        {
+            _tower.neighbourTowers = GetTowersFromPositions();
+        }
+        private List<Position> GetTowersFromPositions()
+        {
+            return MapService.GetDefaultMapConnections()[_tower.position].ToList();
+        }
     }
-
-
 
 }
