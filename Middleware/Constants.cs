@@ -18,7 +18,7 @@ public static class Constants
 
         public static class ClientCommands
         {
-            public const string ARRIVED = "c:Arrived";
+            public const string ARRIVED_TO= "c:Arrived";
             public const string MOVE_TO = "c:MoveTo";
             public const string POWER_UP = "c:PowerUpClicked";
             public const string UPGRADE_TOWER = "c:UpgradeTower";
