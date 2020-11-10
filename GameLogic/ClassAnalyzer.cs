@@ -8,9 +8,9 @@ namespace WeirdUnitBE.GameLogic
 {
     
     
-    public static class  ClassAnalyzer
+    public class  ClassAnalyzer
     {
-        public static List<Type> GetAllLeafClasses(Type baseClass)
+        public List<Type> GetAllLeafClasses(Type baseClass)
         {
             List<Type> leafClassList = new List<Type>();
 
@@ -26,7 +26,7 @@ namespace WeirdUnitBE.GameLogic
             return leafClassList;
         }
 
-        private static List<Type> GetAllHierarchyClasses(Type baseClass)
+        private List<Type> GetAllHierarchyClasses(Type baseClass)
         {
             List<Type> hierarchy = new List<Type>();
 
@@ -36,7 +36,7 @@ namespace WeirdUnitBE.GameLogic
             return hierarchy;
         }
 
-        private static List<Type> GetAllSubClasses(Type baseClass)
+        private List<Type> GetAllSubClasses(Type baseClass)
         {
             List<Type> subClasses = Assembly
                 .GetAssembly(baseClass)
@@ -46,7 +46,7 @@ namespace WeirdUnitBE.GameLogic
             return subClasses;
         }
 
-        private static bool HasChildren(Type type)
+        private bool HasChildren(Type type)
         {
             return GetAllSubClasses(type).Any();
         }
