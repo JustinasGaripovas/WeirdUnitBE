@@ -11,17 +11,32 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             dynamic payload = args.jsonObj.payload;
-            Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);           
+            Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);    
 
-            Tower tower = gameState.PositionToTowerDict[towerPosition];                              
+            //Position towerFromPosition = new Position((int) payload.position.X, (int) payload.position.Y);       
+            Tower tower = gameState.PositionToTowerDict[towerPosition];                
+            string uuidFrom = args.payload.uuidFrom;
+            int movingUnitCount = args.payload.unitCount;
+            if(tower.owner == uuidFrom)
+            {
+                tower.unitCount += movingUnitCount;
+            }
+            else {
+                if(movingUnitCount > tower.unitCount)
+                {
+                    tower.owner = uuidFrom;
+                }
+                else if(movingUnitCount == tower.unitCount)
+                {
+                    tower.owner = "";
+                }               
+                tower.unitCount = Math.Abs(tower.unitCount - movingUnitCount);               
+            }    
 
-            tower.unitCount -= (int)payload.unitCount;
-            //int attackingUnits = (int)payload.unitCount;
-
-            return FormatCommand(tower.unitCount, towerPosition);
+            return FormatCommand(tower.unitCount, tower.owner, towerPosition);
         }
 
-        private dynamic FormatCommand(int unitCount, Position position)
+        private dynamic FormatCommand(int unitCount, string owner, Position position)
         {
             return new
             {
@@ -29,7 +44,8 @@ namespace WeirdUnitBE.GameLogic
                 payload = new
                 {
                     position = position,
-                    unitCount = unitCount
+                    unitCount = unitCount,
+                    owner = owner
                 }
             };
         }

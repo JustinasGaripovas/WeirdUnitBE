@@ -20,7 +20,8 @@ namespace WeirdUnitBE.GameLogic
             int timeInSeconds = (int)(distance / GameState.GAME_SPEED);
             
             //return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
-            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.position, attackingUnitCount);
+            string uuidFrom = towerFrom.owner;
+            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.position, attackingUnitCount, uuidFrom);
         }
 
         private static double CalculateDistance(Tower towerTo, Tower towerFrom)
@@ -48,7 +49,7 @@ namespace WeirdUnitBE.GameLogic
             return (towerFrom, towerTo);
         }
 
-        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int unitC)
+        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int unitC, string uuidFrom)
         {
             return new
             {
@@ -58,6 +59,7 @@ namespace WeirdUnitBE.GameLogic
                     towerToPosition = towerToPosition,
                     towerFromPosition = towerFromPosition,
                     unitCount = unitC,
+                    uuidFrom = uuidFrom,
                     timeToArriveInSeconds = timeInSeconds
                 }
             };
