@@ -15,8 +15,8 @@ namespace WeirdUnitBE.GameLogic
 
             //Position towerFromPosition = new Position((int) payload.position.X, (int) payload.position.Y);       
             Tower tower = gameState.PositionToTowerDict[towerPosition];                
-            string uuidFrom = args.payload.uuidFrom;
-            int movingUnitCount = args.payload.unitCount;
+            string uuidFrom = payload.uuidFrom;
+            int movingUnitCount = payload.unitCount;
             if(tower.owner == uuidFrom)
             {
                 tower.unitCount += movingUnitCount;
