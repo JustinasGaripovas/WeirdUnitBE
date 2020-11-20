@@ -219,6 +219,8 @@ namespace WeirdUnitBE.Middleware
 
         private async void HandleOnArrivedToEvent(object sender, JsonReceivedEventArgs args)
         {
+            Console.WriteLine("Arrived to EVENT");
+
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             //Room room = args.room;
