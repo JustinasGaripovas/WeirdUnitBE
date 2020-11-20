@@ -14,6 +14,8 @@ public static class Constants
             public const string CONN_ID = "s:ConnID";
             public const string POWER_UP = "s:PowerUp";
             public const string UPGRADE_TOWER = "s:UpgradeTower";
+
+            public const string ARRIVED_TO = "s:ArrivedTo";
         }
 
         public static class ClientCommands

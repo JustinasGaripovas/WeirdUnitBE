@@ -135,7 +135,7 @@ namespace WeirdUnitBE.Middleware
                 
                 roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
 
-                HandleCommands(roomSubject);
+                ConfigureEventHandler(roomSubject);
                 
                 var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
                 await roomSubject.Broadcast(buffer);
@@ -144,12 +144,13 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
-        private void HandleCommands(RoomSubject roomSubject)
+        private void ConfigureEventHandler(RoomSubject roomSubject)
         {
             jsonHandler = new JsonMessageHandler(roomSubject);
             jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
             jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
             jsonHandler.UpgradeTowerEvent += HandleUpgradeEvent;
+            jsonHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
         }
 
         private static byte[] GetConnIDCommandBuffer(string connID)
@@ -214,6 +215,18 @@ namespace WeirdUnitBE.Middleware
             }
 
             return connID;
+        }
+
+        private async void HandleOnArrivedToEvent(object sender, JsonReceivedEventArgs args)
+        {
+            string roomId = args.room.roomID;
+            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
+
+            IGameStateExecutable executive = new ArrivedToExecutive();
+            var gameStateInfo = executive.ExecuteCommand(args, gameState);
+
+            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
+            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
         private async void HandleOnMoveToEvent(object sender, JsonReceivedEventArgs args)

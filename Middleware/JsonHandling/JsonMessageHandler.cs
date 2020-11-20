@@ -19,6 +19,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
         public event EventHandler<JsonReceivedEventArgs> OnMoveToEvent;
         public event EventHandler<JsonReceivedEventArgs> OnPowerUpEvent;
         public event EventHandler<JsonReceivedEventArgs> UpgradeTowerEvent;
+        public event EventHandler<JsonReceivedEventArgs> OnArrivedToEvent;
 
         public JsonMessageHandler(RoomSubject subject)
         {
@@ -53,7 +54,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
             {
                 await AnalyzeCommandBag(jsonObj, args);
-            }
+            }           
 
             _subject.commandList.Add(jsonObj as Object);
         }
@@ -68,7 +69,8 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                 {
                     if(currentCommand.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
                     {
-                        await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
+                        await Task.Run(() => OnArrivedToEvent?.Invoke(this, args));
+                        //await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
                     }
                 }
             }
