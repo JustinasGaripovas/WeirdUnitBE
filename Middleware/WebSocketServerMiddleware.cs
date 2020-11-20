@@ -221,6 +221,7 @@ namespace WeirdUnitBE.Middleware
         {
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
+            //Room room = args.room;
 
             IGameStateExecutable executive = new ArrivedToExecutive();
             var gameStateInfo = executive.ExecuteCommand(args, gameState);

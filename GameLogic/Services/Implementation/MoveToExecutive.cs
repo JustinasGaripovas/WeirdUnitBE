@@ -11,15 +11,16 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             (Tower towerFrom, Tower towerTo) = GetTowerParameters(args as Object, gameState);
-            towerFrom.unitCount /= 2;
+            int attackingUnitCount = (int)towerFrom.unitCount / 2; 
+            towerFrom.unitCount -= attackingUnitCount;
 
             //TODO: Calculate time to move from one tower to another
             var distance = CalculateDistance(towerTo, towerFrom);
 
-            int timeInSeconds = (int)(distance / GameState.GAME_SPEED);            
+            int timeInSeconds = (int)(distance / GameState.GAME_SPEED);
             
             //return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
-            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.unitCount);
+            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.position, attackingUnitCount);
         }
 
         private static double CalculateDistance(Tower towerTo, Tower towerFrom)
@@ -35,8 +36,7 @@ namespace WeirdUnitBE.GameLogic
         }
 
         private (Tower, Tower) GetTowerParameters(dynamic args, GameState gameState)
-        {
-            
+        {    
             dynamic payload = args.jsonObj.payload;
             
             Position positionFrom = new Position((int) payload.moveFrom.X, (int) payload.moveFrom.Y);
@@ -48,14 +48,15 @@ namespace WeirdUnitBE.GameLogic
             return (towerFrom, towerTo);
         }
 
-        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, int unitC)
+        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int unitC)
         {
             return new
             {
                 command = Constants.JsonCommands.ServerCommands.MOVE_TO,
                 payload = new
                 {
-                    position = towerToPosition,
+                    towerToPosition = towerToPosition,
+                    towerFromPosition = towerFromPosition,
                     unitCount = unitC,
                     timeToArriveInSeconds = timeInSeconds
                 }

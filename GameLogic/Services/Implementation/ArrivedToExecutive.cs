@@ -12,8 +12,10 @@ namespace WeirdUnitBE.GameLogic
         {
             dynamic payload = args.jsonObj.payload;
             Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);
+            Room room = (Room)args.room;            
 
-            Tower tower = gameState.PositionToTowerDict[towerPosition];
+            Tower tower = gameState.PositionToTowerDict[towerPosition];                              
+
             tower.unitCount -= (int)payload.unitCount;
             //int attackingUnits = (int)payload.unitCount;
 
