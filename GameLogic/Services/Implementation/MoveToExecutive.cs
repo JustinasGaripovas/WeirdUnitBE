@@ -11,13 +11,15 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             (Tower towerFrom, Tower towerTo) = GetTowerParameters(args as Object, gameState);
+            towerFrom.unitCount /= 2;
 
             //TODO: Calculate time to move from one tower to another
             var distance = CalculateDistance(towerTo, towerFrom);
 
             int timeInSeconds = (int)(distance / GameState.GAME_SPEED);            
             
-            return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
+            //return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
+            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.unitCount);
         }
 
         private static double CalculateDistance(Tower towerTo, Tower towerFrom)

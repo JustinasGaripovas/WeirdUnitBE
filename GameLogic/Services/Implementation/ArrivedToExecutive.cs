@@ -14,7 +14,8 @@ namespace WeirdUnitBE.GameLogic
             Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);
 
             Tower tower = gameState.PositionToTowerDict[towerPosition];
-            tower.unitCount = (int)payload.unitCount;
+            tower.unitCount -= (int)payload.unitCount;
+            //int attackingUnits = (int)payload.unitCount;
 
             return FormatCommand(tower.unitCount, towerPosition);
         }
