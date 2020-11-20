@@ -50,9 +50,11 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                 await Task.Run(() => UpgradeTowerEvent?.Invoke(this, args));
                 return;
             }
-
+            Console.WriteLine(jsonObj.command);
+            Console.WriteLine(Constants.JsonCommands.ClientCommands.ARRIVED_TO);
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
             {
+                Console.WriteLine("MESS IDENTISKI");
                 await AnalyzeCommandBag(jsonObj, args);
             }           
 
@@ -63,12 +65,11 @@ namespace WeirdUnitBE.Middleware.JsonHandling
         {
             foreach (dynamic command in _subject.commandList)
             {
-                Console.WriteLine(IsSameCommand(currentCommand, command));
-
                 if (IsSameCommand(currentCommand, command))
-                {
+                {                  
                     if(currentCommand.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
                     {
+                        Console.WriteLine("KAS DKSHDJSHDIHGDSUYHDGUYSDGISAJ");
                         await Task.Run(() => OnArrivedToEvent?.Invoke(this, args));
                         //await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
                     }
@@ -94,18 +95,11 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                     // Console.WriteLine("IsDiffNotEmpty");
                     
                     List<string> jsonKeys = GetJsonKeyListFromJToken(diffResult);
-                    // Console.WriteLine(diffResult.ToString());
-                    //
-                    // Console.WriteLine("------------------------------------------------");
-                    //
-                    // foreach (var VARIABLE in jsonKeys)
-                    // {
-                    //     Console.WriteLine(VARIABLE);
-                    // }
                     
+                    Console.WriteLine(jsonKeys.First().ToString());
                     if (jsonKeys.Contains("uuid") && jsonKeys.Count == 1)
                     {
-                        
+                        Console.WriteLine("RADOM IDENTISKAS KOMANDAS");
                         // Console.WriteLine(jsonKeys.First().ToString());
                         
                         return true;

@@ -39,7 +39,7 @@ namespace WeirdUnitBE.GameLogic
         private (Tower, Tower) GetTowerParameters(dynamic args, GameState gameState)
         {    
             dynamic payload = args.jsonObj.payload;
-            
+            //Console.WriteLine(payload);
             Position positionFrom = new Position((int) payload.moveFrom.X, (int) payload.moveFrom.Y);
             Tower towerFrom = gameState.PositionToTowerDict[positionFrom];
 
@@ -49,7 +49,7 @@ namespace WeirdUnitBE.GameLogic
             return (towerFrom, towerTo);
         }
 
-        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int unitC, int towerFromUnitCount, string uuidFrom)
+        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int attackingUnitCount, int towerFromUnitCount, string uuidFrom)
         {
             return new
             {
@@ -58,7 +58,7 @@ namespace WeirdUnitBE.GameLogic
                 {
                     towerToPosition = towerToPosition,
                     towerFromPosition = towerFromPosition,
-                    unitCount = unitC,
+                    unitCount = attackingUnitCount,
                     uuidFrom = uuidFrom,
                     timeToArriveInSeconds = timeInSeconds,
                     towerFromUnitCount = towerFromUnitCount
