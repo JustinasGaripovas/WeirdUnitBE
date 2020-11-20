@@ -11,8 +11,7 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             dynamic payload = args.jsonObj.payload;
-            Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);
-            Room room = (Room)args.room;            
+            Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);           
 
             Tower tower = gameState.PositionToTowerDict[towerPosition];                              
 
