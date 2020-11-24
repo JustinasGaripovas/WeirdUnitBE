@@ -10,14 +10,12 @@ namespace WeirdUnitBE.GameLogic.Strategies
 {
     public class AttackStrategy : IMoveToStrategy
     {
-        public void ExecuteStrategy(Tower towerFrom, Tower towerTo, Action<Tower, Tower> UpdateGamestate)
+        public void ExecuteStrategy(Tower towerFrom, Tower towerTo, int movingUnitCount)
         {
             if (IsAllowedToAttackPosition(towerTo, towerFrom))
             {
-                HandleAttackingLogic(towerFrom, towerTo);
+                HandleAttackingLogic(towerFrom, towerTo, movingUnitCount);
             }
-
-            UpdateGamestate(towerFrom, towerTo);
         }
 
         private bool IsAllowedToAttackPosition(Tower towerTo, Tower towerFrom)
@@ -25,24 +23,21 @@ namespace WeirdUnitBE.GameLogic.Strategies
             return MapService.GetDefaultMapConnections()[towerFrom.position].ToList().Contains(towerTo.position);
         }
 
-        private static void HandleAttackingLogic(Tower towerFrom, Tower towerTo)
+        private static void HandleAttackingLogic(Tower towerFrom, Tower towerTo, int movingUnitCount)
         {
-            int attackUnitCount = towerFrom.unitCount / 2;
-            towerFrom.unitCount -= attackUnitCount;
-            
-            if (attackUnitCount > towerTo.unitCount)
+            if (movingUnitCount > towerTo.unitCount)
             {
                 towerTo.owner = towerFrom.owner;
-                towerTo.unitCount = Math.Abs(towerTo.unitCount - attackUnitCount);
+                towerTo.unitCount = Math.Abs(towerTo.unitCount - movingUnitCount);
             }
-            else if (attackUnitCount == towerTo.unitCount)
+            else if (movingUnitCount == towerTo.unitCount)
             {
                 towerTo.owner = String.Empty;
                 towerTo.unitCount = 0;
             }
             else
             {
-                towerTo.unitCount -= attackUnitCount;
+                towerTo.unitCount -= movingUnitCount;
             }
         }
     }

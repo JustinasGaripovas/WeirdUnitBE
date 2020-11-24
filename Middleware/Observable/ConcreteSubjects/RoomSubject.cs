@@ -15,6 +15,7 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteSubjects
         public GameState gameState { get; set; }
         
         public ConcurrentBag<Object> commandList = new ConcurrentBag<Object>();
+        
 
         public RoomSubject(params object[] _clients)
         {

@@ -92,7 +92,6 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                 }
             }
             catch(Exception) {
-
             }
             return false;        
         }
