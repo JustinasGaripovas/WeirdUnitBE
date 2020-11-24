@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WeirdUnitBE.Middleware;
 using WeirdUnitBE.Middleware.Observable.ConcreteSubjects;
+using System.Runtime.CompilerServices;
 
 namespace WeirdUnitBE.Middleware.JsonHandling
 {
@@ -20,6 +21,8 @@ namespace WeirdUnitBE.Middleware.JsonHandling
         public event EventHandler<JsonReceivedEventArgs> OnPowerUpEvent;
         public event EventHandler<JsonReceivedEventArgs> UpgradeTowerEvent;
         public event EventHandler<JsonReceivedEventArgs> OnArrivedToEvent;
+
+        private readonly object analyzeCommandBagLock = new object();
 
         public JsonMessageHandler(RoomSubject subject)
         {
@@ -39,9 +42,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
 
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.MOVE_TO)
             {
-                Console.WriteLine("We send move to back to the client");
-                
-                await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
+                await Task.Run(() => OnMoveToEvent?.Invoke(this, args));                
                 return;
             }
 
@@ -50,66 +51,55 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                 await Task.Run(() => UpgradeTowerEvent?.Invoke(this, args));
                 return;
             }
-            Console.WriteLine(jsonObj.command);
-            Console.WriteLine(Constants.JsonCommands.ClientCommands.ARRIVED_TO);
+            
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
-            {
-                Console.WriteLine("MESS IDENTISKI");
-                await AnalyzeCommandBag(jsonObj, args);
+            {     
+                await AnalyzeCommandBagAsync(jsonObj, args);     
             }           
-
-            _subject.commandList.Add(jsonObj as Object);
         }
 
-        private async Task AnalyzeCommandBag(dynamic currentCommand, JsonReceivedEventArgs args)
+        
+        private async Task AnalyzeCommandBagAsync(dynamic currentCommand, JsonReceivedEventArgs args)
+        {                      
+            if(SimilarCommandsByDifferentSenders(currentCommand))
+            {
+                await Task.Run(() => OnArrivedToEvent?.Invoke(this, args));
+            }           
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public bool SimilarCommandsByDifferentSenders(dynamic currentCommand)
         {
             foreach (dynamic command in _subject.commandList)
-            {
-                if (IsSameCommand(currentCommand, command))
-                {                  
-                    if(currentCommand.command == Constants.JsonCommands.ClientCommands.ARRIVED_TO)
-                    {
-                        Console.WriteLine("KAS DKSHDJSHDIHGDSUYHDGUYSDGISAJ");
-                        await Task.Run(() => OnArrivedToEvent?.Invoke(this, args));
-                        //await Task.Run(() => OnMoveToEvent?.Invoke(this, args));
-                    }
+            {                     
+                if (SimilarCommandFound(currentCommand, command))
+                {   
+                    return true;
                 }
-            }
+            }           
+            _subject.commandList.Add(currentCommand as Object);
+            return false;
         }
 
-        private bool IsSameCommand(dynamic currentCommand, dynamic command)
+        private bool SimilarCommandFound(dynamic command1, dynamic command2)
         {
-            Console.WriteLine("STARTPROCESS;");
-            Console.WriteLine(command.command);
-            Console.WriteLine(currentCommand.command);
-            Console.WriteLine(command.command == currentCommand.command);
-            
-            if (command.command == currentCommand.command)
+            JToken JTokenDifference = _jdp.Diff(command1, command2);
+            try
             {
-                Console.WriteLine("Commands are the same");
-                
-                JToken diffResult = _jdp.Diff(currentCommand, command);
-
-                if(IsDiffNotEmpty(diffResult))
-                {
-                    // Console.WriteLine("IsDiffNotEmpty");
-                    
-                    List<string> jsonKeys = GetJsonKeyListFromJToken(diffResult);
-                    
-                    Console.WriteLine(jsonKeys.First().ToString());
-                    if (jsonKeys.Contains("uuid") && jsonKeys.Count == 1)
-                    {
-                        Console.WriteLine("RADOM IDENTISKAS KOMANDAS");
-                        // Console.WriteLine(jsonKeys.First().ToString());
-                        
-                        return true;
-                    }
+                List<string> jsonKeysFromDifference = GetJsonKeyListFromJToken(JTokenDifference);
+                if(ListContainsOnlyOneSpecificDifference(jsonKeysFromDifference, "uuid")) {
+                    return true;
                 }
-
-                return false;
             }
+            catch(Exception) {
 
-            return false;
+            }
+            return false;        
+        }
+
+        private bool ListContainsOnlyOneSpecificDifference(List<string> list, string difference)
+        {
+            return list.Count == 1 && list.Contains(difference);
         }
 
         private List<string> GetJsonKeyListFromJToken(JToken diffResult)
@@ -124,11 +114,6 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             }
 
             return jsonKeys;
-        }
-
-        private bool IsDiffNotEmpty(JToken diffResult)
-        {
-            return diffResult != null;
         }
 
         public static object ConvertObjectToJsonBuffer(object obj)
