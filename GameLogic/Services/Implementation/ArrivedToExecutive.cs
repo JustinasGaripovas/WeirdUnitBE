@@ -10,38 +10,34 @@ namespace WeirdUnitBE.GameLogic
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
-            Console.WriteLine("CIAAAAAAAAAAAAA");
-            Console.WriteLine(args);
             dynamic payload = args.jsonObj.payload;
-
             Position towerPosition = new Position((int) payload.position.X, (int) payload.position.Y);    
-
-            //Position towerFromPosition = new Position((int) payload.position.X, (int) payload.position.Y);       
             Tower tower = gameState.PositionToTowerDict[towerPosition];                
             string uuidFrom = payload.uuidFrom;
             int movingUnitCount = payload.unitCount;
-            //Console.WriteLine(uuidFrom + "UUIDFROM");
-            //Console.WriteLine(tower.position.X + " IR " + tower.position.Y);
-            //Console.WriteLine(tower.owner + "TOWER.OWNER");
-            if(tower.owner == uuidFrom)
+            
+            Position towerToPosition = new Position((int) payload.towerToPosition.X, (int) payload.towerToPosition.Y);
+            Tower towerTo = gameState.PositionToTowerDict[towerToPosition];  
+            
+            if(towerTo.owner == uuidFrom)
             {
-                tower.unitCount += movingUnitCount;
+                towerTo.unitCount += movingUnitCount;
             }
             else {
-                if(movingUnitCount > tower.unitCount)
+                if(movingUnitCount > towerTo.unitCount)
                 {
-                    tower.owner = uuidFrom;
+                    towerTo.owner = uuidFrom;
                 }
-                else if(movingUnitCount == tower.unitCount)
+                else if(movingUnitCount == towerTo.unitCount)
                 {
-                    tower.owner = "";
+                    towerTo.owner = "";
                 }               
-                tower.unitCount = Math.Abs(tower.unitCount - movingUnitCount);               
+                towerTo.unitCount = Math.Abs(towerTo.unitCount - movingUnitCount);               
             }    
 
-            Console.WriteLine(tower.unitCount + " cia yra jksdahfkjshfi");
+            Console.WriteLine(towerTo.unitCount + " cia yra jksdahfkjshfi");
 
-            return FormatCommand(tower.unitCount, tower.owner, towerPosition);
+            return FormatCommand(towerTo.unitCount, towerTo.owner, towerToPosition);
         }
 
         private dynamic FormatCommand(int unitCount, string owner, Position position)
