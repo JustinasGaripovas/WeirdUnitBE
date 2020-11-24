@@ -68,7 +68,6 @@ namespace WeirdUnitBE.Middleware
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
                         Room currentRoom = socketToRoomDict[webSocket];
 
-                        
                         await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
 
                         return;
@@ -120,8 +119,7 @@ namespace WeirdUnitBE.Middleware
                 var enemySocket = GetEnemySocket(enemyConnectionId);
                 var enemyIDBuffer = GetConnIDCommandBuffer(enemyConnectionId);
                 await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                // Refactor this 
+ 
                 var roomId = Room.GenerateRoomUUID();
                 socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
                 socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
@@ -159,7 +157,6 @@ namespace WeirdUnitBE.Middleware
 
             var messageJson = JsonConvert.SerializeObject(connIDInfo, Formatting.Indented);
             return Encoding.UTF8.GetBytes(messageJson);
-
         }
 
         private WebSocket GetEnemySocket(string enemyConnectionId)
@@ -221,8 +218,7 @@ namespace WeirdUnitBE.Middleware
         {
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
-            //Room room = args.room;
-            
+
             IGameStateExecutable executive = new ArrivedToExecutive();
             var gameStateInfo = executive.ExecuteCommand(args, gameState);
 
@@ -236,10 +232,42 @@ namespace WeirdUnitBE.Middleware
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             
             IGameStateExecutable executive = new MoveToExecutive();
-            var gameStateInfo = executive.ExecuteCommand(args, gameState);
+            try
+            {
+                var gameStateInfo = executive.ExecuteCommand(args, gameState);
+                await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
+            }
+            catch(Exception e)
+            {
+                var gameStateInfo = new
+                {
+                    command = Constants.JsonCommands.ServerCommands.EXCEPTION,
+                    payload = new
+                    {
+                        message = e.Message
+                    }
+                };
+                await FormatBufferFromInfoAndSendToClient(gameStateInfo, args.room.currentID);
+            }
+        }
 
-            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
+        private async Task FormatBufferFromInfoAndSendToClient(dynamic info, string clientID)
+        {
+            var buffer = FormatBufferFromInfo(info);
+            WebSocket socket = _manager.GetAllSockets()[clientID];
+            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        private async Task FormatBufferFromInfoAndBroadcastToRoom(dynamic info, string roomId)
+        {
+            var buffer = FormatBufferFromInfo(info);
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+        }
+
+        private object FormatBufferFromInfo(dynamic info)
+        {
+            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(info);
+            return buffer;
         }
 
         private async void HandleUpgradeEvent(object sender, JsonReceivedEventArgs args)
