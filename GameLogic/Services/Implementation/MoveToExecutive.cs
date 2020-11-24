@@ -10,46 +10,60 @@ namespace WeirdUnitBE.GameLogic
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
-            (Tower towerFrom, Tower towerTo) = GetTowerParameters(args as Object, gameState);
-            int attackingUnitCount = (int)towerFrom.unitCount / 2; 
-            towerFrom.unitCount -= attackingUnitCount;
+            (Position positionFrom, Position positionTo) = GetPositionsFromJsonArgs(args as Object);
 
-            //TODO: Calculate time to move from one tower to another
-            var distance = CalculateDistance(towerTo, towerFrom);
+            if(positionFrom.Equals(positionTo))
+            {
+                throw new InvalidMovementException("Movement to the same tower is invalid");
+            }
 
-            int timeInSeconds = (int)(distance / GameState.GAME_SPEED);
-            
-            //return FormatCommand(timeInSeconds, towerTo.position, (int)towerFrom.unitCount/2);
+            Tower towerFrom = gameState.GetTowerFromPosition(positionFrom);
+            Tower towerTo = gameState.GetTowerFromPosition(positionTo);
+
+            int movingUnitCount = GetMovingUnitCountFromTower(towerFrom);
+            SubtractMovingUnitCountFromTower(movingUnitCount, towerFrom);
+            int movementTimeInSeconds = CalculateMovementTimeBetweenTwoTowers(towerFrom, towerTo, GameState.GAME_SPEED);
+                       
             string uuidFrom = towerFrom.owner;
-            return FormatCommand(timeInSeconds, towerTo.position, towerFrom.position, attackingUnitCount, towerFrom.unitCount, uuidFrom);
+
+            return FormatCommand(movementTimeInSeconds, towerTo.position, towerFrom.position, movingUnitCount, towerFrom.unitCount, uuidFrom);
         }
 
-        private static double CalculateDistance(Tower towerTo, Tower towerFrom)
+        private static (Position, Position) GetPositionsFromJsonArgs(dynamic args)
         {
-            return Math.Sqrt(Math.Pow(towerTo.position.Y - towerFrom.position.Y, 2) +
-                             Math.Pow(towerTo.position.X - towerFrom.position.X, 2));
-        }
-
-        public object UndoCommand(dynamic args, GameState gameState)
-        {
-            //TODO: needs implementation
-            return null;
-        }
-
-        private (Tower, Tower) GetTowerParameters(dynamic args, GameState gameState)
-        {    
             dynamic payload = args.jsonObj.payload;
-            //Console.WriteLine(payload);
+
             Position positionFrom = new Position((int) payload.moveFrom.X, (int) payload.moveFrom.Y);
-            Tower towerFrom = gameState.PositionToTowerDict[positionFrom];
-
             Position positionTo = new Position((int) payload.moveTo.X, (int) payload.moveTo.Y);
-            Tower towerTo = gameState.PositionToTowerDict[positionTo];
 
-            return (towerFrom, towerTo);
+            return (positionFrom, positionTo);
+        }  
+
+        private static int GetMovingUnitCountFromTower(Tower tower)
+        {
+            int unitCount = tower.unitCount;
+            int movingUnits = unitCount / 2;
+            return movingUnits;
         }
 
-        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int attackingUnitCount, int towerFromUnitCount, string uuidFrom)
+        private static void SubtractMovingUnitCountFromTower(int movingUnitCount, Tower tower)
+        {
+            tower.unitCount -= movingUnitCount;
+        }
+
+        private static int CalculateMovementTimeBetweenTwoTowers(Tower towerFrom, Tower towerTo, double movementSpeed)
+        {
+            var distanceBetweenTwoTowers = CalculateDistanceBetweenTwoTowers(towerTo, towerFrom);
+            int movementTime = (int)(distanceBetweenTwoTowers / movementSpeed);
+            return movementTime;
+        }
+
+        private static double CalculateDistanceBetweenTwoTowers(Tower towerTo, Tower towerFrom)
+        {
+            return towerFrom.position.DistanceToPosition(towerTo.position);
+        }    
+      
+        private dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int movingUnitCount, int towerFromUnitCount, string uuidFrom)
         {
             return new
             {
@@ -58,14 +72,15 @@ namespace WeirdUnitBE.GameLogic
                 {
                     towerToPosition = towerToPosition,
                     towerFromPosition = towerFromPosition,
-                    unitCount = attackingUnitCount,
+                    unitCount = movingUnitCount,
                     uuidFrom = uuidFrom,
                     timeToArriveInSeconds = timeInSeconds,
                     towerFromUnitCount = towerFromUnitCount
                 }
             };
         }
-
+        
+        #region Not Implemented Yet
         private dynamic FormatUndo(dynamic affectedTowers)
         {
             return new
@@ -74,5 +89,11 @@ namespace WeirdUnitBE.GameLogic
                 payload = new { allTowers = affectedTowers }
             };
         }
+
+        public dynamic UndoCommand(dynamic kazkas, GameState smth)
+        {
+            return null;
+        }
+        #endregion
     }
 }
