@@ -8,6 +8,6 @@ namespace WeirdUnitBE.GameLogic.Strategies
 {
     public interface IMoveToStrategy
     {
-        void ExecuteStrategy(Tower towerFrom, Tower towerTo, Action<Tower, Tower> UpdateGamestate);
+        void ExecuteStrategy(Tower towerFrom, Tower towerTo, int movingUnitCount);
     }
 }

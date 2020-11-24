@@ -10,24 +10,20 @@ namespace WeirdUnitBE.GameLogic.Strategies
 {
     public class ReinforceStrategy : IMoveToStrategy
     {
-        public void ExecuteStrategy(Tower towerFrom, Tower towerTo, Action<Tower, Tower> UpdateGamestate)
+        public void ExecuteStrategy(Tower towerFrom, Tower towerTo, int movingUnitCount)
         {
-            if (IsAllowedToAttackPosition(towerTo, towerFrom))
+            if (IsAllowedToReinforcePosition(towerTo, towerFrom))
             {
-                HandleReinforceLogic(towerFrom, towerTo);
+                HandleReinforceLogic(towerFrom, towerTo, movingUnitCount);
             }
-            
-            UpdateGamestate(towerFrom, towerTo);
         }
 
-        private static void HandleReinforceLogic(Tower towerFrom, Tower towerTo)
+        private static void HandleReinforceLogic(Tower towerFrom, Tower towerTo, int movingUnitCount)
         {
-            int reinforceUnitCount = towerFrom.unitCount / 2;
-            towerFrom.unitCount -= reinforceUnitCount;
-            towerTo.unitCount += reinforceUnitCount;
+            towerTo.unitCount += movingUnitCount;
         }
 
-        private bool IsAllowedToAttackPosition(Tower towerTo, Tower towerFrom)
+        private bool IsAllowedToReinforcePosition(Tower towerTo, Tower towerFrom)
         {
             return MapService.GetDefaultMapConnections()[towerFrom.position].ToList().Contains(towerTo.position);
         }
