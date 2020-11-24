@@ -40,6 +40,11 @@ namespace WeirdUnitBE.GameLogic
         }
 
         #region GETTERS
+        public Tower GetTowerFromPosition(Position position)
+        {
+            return PositionToTowerDict[position];
+        }
+        
         public List<Tower> GetAllTowers()
         {
             return PositionToTowerDict.Values.ToList();
