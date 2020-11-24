@@ -7,8 +7,16 @@ namespace WeirdUnitBE.GameLogic
         public readonly int X;
         public readonly int Y;
 
-        public Position(int X, int Y) =>
-            (this.X, this.Y) = (X, Y);
+        public Position(int X, int Y) {
+            this.X = X;
+            this.Y = Y;
+        }
+
+        public double DistanceToPosition(Position position)
+        {
+            return Math.Sqrt(Math.Pow(this.X - position.X, 2) +
+                Math.Pow(this.Y - position.Y, 2));
+        }
 
         public Position SymmetricPosition(int mapDimensionX, int mapDimensionY)
         {
@@ -17,8 +25,7 @@ namespace WeirdUnitBE.GameLogic
 
         public override bool Equals(Object obj)
         {
-            //Check for null and compare run-time types.
-            if ((obj == null) || ! this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
             {
                 return false;
             }
@@ -31,7 +38,7 @@ namespace WeirdUnitBE.GameLogic
 
         public override int GetHashCode()
         {
-            unchecked // Ignore overflow
+            unchecked
             {
                 int hash = 17;
                 hash = hash * 23 + X.GetHashCode();
