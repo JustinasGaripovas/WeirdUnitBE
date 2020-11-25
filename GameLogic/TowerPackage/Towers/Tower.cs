@@ -53,7 +53,10 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
             Tower newTower = (Tower)this.MemberwiseClone();
             newTower.owner = new StringBuilder(this.owner).ToString();
             newTower.position = new Position(this.position.X, this.position.Y);
-
+            newTower.neighbourTowers = this.neighbourTowers.ConvertAll
+                (
+                    towerPosition => new Position(towerPosition.X, towerPosition.Y)
+                );
             return newTower;
         }
     }
