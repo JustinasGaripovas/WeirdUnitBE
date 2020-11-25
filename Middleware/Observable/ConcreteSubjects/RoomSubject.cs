@@ -13,18 +13,7 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteSubjects
     {
         private List<Object> clients;
         public GameState gameState { get; set; }
-        
         public ConcurrentBag<Object> commandList = new ConcurrentBag<Object>();
-        
-
-        public RoomSubject(params object[] _clients)
-        {
-            clients = new List<Object>();
-            foreach (object client in _clients)
-            {
-                Attach((IObserver)client);
-            }
-        }
 
         public RoomSubject(GameState gameState, params object[] _clients)
         {
@@ -50,6 +39,5 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteSubjects
                 await ((IObserver)clients[i]).SendData(this, data);
             }
         }
-
     }
 }

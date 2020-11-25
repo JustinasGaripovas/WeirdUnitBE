@@ -9,6 +9,7 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteObservers
     public class UserSocketObserver : IObserver
     {
         public WebSocket socket;
+        
         public UserSocketObserver(WebSocket _socket)
         {
             socket = _socket;
@@ -16,7 +17,7 @@ namespace WeirdUnitBE.Middleware.Observable.ConcreteObservers
 
         public async Task SendData(ISubject subject, object data)
         {
-            if(subject is RoomSubject roomSubject)
+            if(subject is RoomSubject)
             {
                 await socket.SendAsync((byte[])data, WebSocketMessageType.Text, true, CancellationToken.None);
             }
