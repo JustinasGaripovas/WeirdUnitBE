@@ -64,8 +64,6 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
 
                 Tower neutralTowerDecorator = new NeutralTowerDecorator(tower, position);
 
-//                tower.position = position;
-//               tower.unitCount = 10;
                 positionToTowerDict.TryAdd(tower.position, tower);
             }
         }
@@ -75,7 +73,8 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             foreach (Position position in MapService.GetDefaultMap())
             {
                 Tower tower = positionToTowerDict[position];
-                tower.neighbourTowers = GetTowersFromPositions(position);
+                Tower neighboursTowerDecorator = new NeighboursTowerDecorator(tower);
+                //tower.neighbourTowers = GetTowersFromPositions(position);
             }
         }
 
