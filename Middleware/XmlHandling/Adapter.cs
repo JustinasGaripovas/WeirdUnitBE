@@ -1,41 +1,38 @@
 using System;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-//using JsonDiffPatchDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using WeirdUnitBE.Middleware;
-using WeirdUnitBE.Middleware.Observable.ConcreteSubjects;
 using System.Xml;
-
-
 
 namespace WeirdUnitBE.Middleware.XmlHandling
 {
-
     public class Adapter
     {
-        
-        public Adapter()
-        {
-        }
-
         public bool IsJson(string input)
         {
-        input = input.Trim();
-        return input.StartsWith("{") && input.EndsWith("}") || input.StartsWith("[") && input.EndsWith("]");
+            input = input.Trim();
+            return InputWrappedInCurlyBrackets(input) || InputWrappedInSquareBrackets(input);
         }
 
-        public string ConvertToJson(string xml)
+        public bool InputWrappedInCurlyBrackets(string input)
         {
-            // To convert an XML node contained in string xml into a JSON string   
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(xml);
-            string jsonText = JsonConvert.SerializeXmlNode(doc);
+            return input.StartsWith("{") && input.EndsWith("}");
+        }
 
-            return jsonText;
+        public bool InputWrappedInSquareBrackets(string input)
+        {
+            return input.StartsWith("[") && input.EndsWith("]");
+        }
+
+        public string ConvertToJson(string xmlString)
+        {   
+            XmlDocument xmldocument = new XmlDocument();
+            xmldocument.LoadXml(xmlString);
+
+            string jsonString = JsonConvert.SerializeXmlNode(xmldocument);
+
+            return jsonString;
         }
 
     }
