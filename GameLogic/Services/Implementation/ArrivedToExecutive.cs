@@ -10,6 +10,15 @@ namespace WeirdUnitBE.GameLogic
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         { 
+            // GetPayloadFromArgs
+            // GetTowersFromJsonArgs
+            // GetCopyOfTower
+            // AssignOwnerToTowerFromMemory
+            // DetermineStrategy
+            // GetMovingUnitCountFromPayload
+            // ExecuteStrategy
+            // FormatCommand
+
             dynamic payload = args.jsonObj.payload;               
             string uuidFrom = payload.uuidFrom;   
 
@@ -18,14 +27,14 @@ namespace WeirdUnitBE.GameLogic
             towerFromCopy.owner = uuidFrom; 
 
             IMoveToStrategy moveToStrategy = DetermineStrategy(towerFromCopy, towerTo);    
-
             int movingUnitCount = payload.unitCount; 
+            
             moveToStrategy.ExecuteStrategy(towerFromCopy, towerTo, movingUnitCount);
-
+           
             return FormatCommand(towerTo.unitCount, towerTo.owner, towerTo.position);
-        }
+        }       
 
-        private (Tower, Tower) GetTowersFromJsonArgs(dynamic args, GameState gameState)
+        private static (Tower, Tower) GetTowersFromJsonArgs(dynamic args, GameState gameState)
         {    
             (Position positionFrom, Position positionTo) = GetPositionsFromJsonArgs(args as Object);
            
@@ -35,7 +44,7 @@ namespace WeirdUnitBE.GameLogic
             return (towerFrom, towerTo);
         }
 
-        private (Position, Position) GetPositionsFromJsonArgs(dynamic args)
+        private static (Position, Position) GetPositionsFromJsonArgs(dynamic args)
         {
             dynamic payload = args.jsonObj.payload;
 
@@ -45,7 +54,7 @@ namespace WeirdUnitBE.GameLogic
             return (positionFrom, positionTo);
         }
 
-        private IMoveToStrategy DetermineStrategy(Tower towerFrom, Tower towerTo)
+        private static IMoveToStrategy DetermineStrategy(Tower towerFrom, Tower towerTo)
         {   
             IMoveToStrategy strategy;
             if(AreFriendlyTowers(towerFrom, towerTo))
@@ -59,12 +68,12 @@ namespace WeirdUnitBE.GameLogic
             return strategy;
         }
 
-        private bool AreFriendlyTowers(Tower tower1, Tower tower2)
+        private static bool AreFriendlyTowers(Tower tower1, Tower tower2)
         {
             return tower1.owner == tower2.owner;
         }
 
-        private dynamic FormatCommand(int unitCount, string owner, Position position)
+        private static dynamic FormatCommand(int unitCount, string owner, Position position)
         {
             return new
             {
