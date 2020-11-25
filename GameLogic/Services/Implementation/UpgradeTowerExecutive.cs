@@ -38,5 +38,19 @@ namespace WeirdUnitBE.GameLogic
 
             return affectedTowers;
         }
+
+        private static void UpgradeTower(dynamic args, Tower tower)
+        {
+            AbstractFactory abstractTowerFactory = new DefaultTowerFactory();
+            Tower towerCopy = tower.Clone();
+            if((string)args.type == "Regenerating")
+            {
+                tower = abstractTowerFactory.CreateRegeneratingTower();
+            }
+            else
+            {
+                tower = abstractTowerFactory.CreateAttackingTower();
+            }
+        }
     }
 }
