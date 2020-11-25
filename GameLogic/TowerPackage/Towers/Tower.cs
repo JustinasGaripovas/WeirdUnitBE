@@ -18,6 +18,10 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
             set { _owner = value; }
         }
         public List<Position> neighbourTowers { get; set; }
+        public bool HasNeighbourTower(Tower tower)
+        {
+            return neighbourTowers.Contains(tower.position);
+        }
         
         private Position _position;
         public Position position

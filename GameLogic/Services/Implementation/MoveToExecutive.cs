@@ -12,13 +12,10 @@ namespace WeirdUnitBE.GameLogic
         {
             (Position positionFrom, Position positionTo) = GetPositionsFromJsonArgs(args as Object);
 
-            if(positionFrom.Equals(positionTo))
-            {
-                throw new InvalidMovementException("Movement to the same tower is invalid");
-            }
-
             Tower towerFrom = gameState.GetTowerFromPosition(positionFrom);
             Tower towerTo = gameState.GetTowerFromPosition(positionTo);
+
+            ValidateMovementBetweenTowers(towerFrom, towerTo);
 
             int movingUnitCount = GetMovingUnitCountFromTower(towerFrom);
             SubtractMovingUnitCountFromTower(movingUnitCount, towerFrom);
@@ -38,6 +35,31 @@ namespace WeirdUnitBE.GameLogic
 
             return (positionFrom, positionTo);
         }  
+
+        private static void ValidateMovementBetweenTowers(Tower towerFrom, Tower towerTo)
+        {
+            if(TowersAreNotNeighbours(towerFrom, towerTo))
+            {
+                throw new InvalidMovementException("Towers are not neighbours");  
+            }
+            if(MovedToTheSameTower(towerFrom, towerTo))
+            {
+                throw new InvalidMovementException("Movement to the same tower is invalid");
+            }
+        }
+
+        private static bool TowersAreNotNeighbours(Tower towerFrom, Tower towerTo)
+        {
+            return !towerFrom.HasNeighbourTower(towerTo);
+        }
+
+        private static bool MovedToTheSameTower(Tower towerFrom, Tower towerTo)
+        {
+            Position positionFrom = towerFrom.position; 
+            Position positionTo = towerTo.position;
+
+            return positionFrom.Equals(positionTo);
+        }
 
         private static int GetMovingUnitCountFromTower(Tower tower)
         {

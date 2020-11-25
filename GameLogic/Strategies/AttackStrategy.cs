@@ -12,15 +12,7 @@ namespace WeirdUnitBE.GameLogic.Strategies
     {
         public void ExecuteStrategy(Tower towerFrom, Tower towerTo, int movingUnitCount)
         {
-            if (IsAllowedToAttackPosition(towerTo, towerFrom))
-            {
-                HandleAttackingLogic(towerFrom, towerTo, movingUnitCount);
-            }
-        }
-
-        private bool IsAllowedToAttackPosition(Tower towerTo, Tower towerFrom)
-        {
-            return MapService.GetDefaultMapConnections()[towerFrom.position].ToList().Contains(towerTo.position);
+            HandleAttackingLogic(towerFrom, towerTo, movingUnitCount);
         }
 
         private static void HandleAttackingLogic(Tower towerFrom, Tower towerTo, int movingUnitCount)
