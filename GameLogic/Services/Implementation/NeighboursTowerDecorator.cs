@@ -19,5 +19,4 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             return MapService.GetDefaultMapConnections()[_tower.position].ToList();
         }
     }
-
 }

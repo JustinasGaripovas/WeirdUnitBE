@@ -8,6 +8,6 @@ namespace WeirdUnitBE.GameLogic.Services.Interfaces
 {
     public interface IPrototype
     {
-         Tower Clone();
+        Tower Clone();
     }
 }
