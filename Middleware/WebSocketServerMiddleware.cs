@@ -231,7 +231,7 @@ namespace WeirdUnitBE.Middleware
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             
-            IGameStateExecutable executive = new MoveToExecutive();
+            IGameStateExecutable executive = new MoveToExecutive();           
             try
             {
                 var gameStateInfo = executive.ExecuteCommand(args, gameState);
@@ -278,16 +278,24 @@ namespace WeirdUnitBE.Middleware
             var upgradeInfo = new { position = args.jsonObj.payload.position, type = args.jsonObj.payload.upgradeToType};
 
             IGameStateExecutable executive = new UpgradeTowerExecutive();
-            var affectedTowers = executive.ExecuteCommand(upgradeInfo, gameState);
 
-            var gameStateInfo = new
+            try
             {
-                command = Constants.JsonCommands.ServerCommands.UPGRADE_TOWER,
-                payload = new { allTowers = affectedTowers }
-            };
-
-            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
-            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+                var gameStateInfo = executive.ExecuteCommand(args, gameState);
+                await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
+            }
+            catch(InvalidUpgradeException e)
+            {
+                var gameStateInfo = new
+                {
+                    command = Constants.JsonCommands.ServerCommands.EXCEPTION,
+                    payload = new
+                    {
+                        message = e.Message
+                    }
+                };
+                await FormatBufferFromInfoAndSendToClient(gameStateInfo, args.room.currentID);
+            }
         }
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
