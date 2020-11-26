@@ -17,6 +17,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
     {
         private readonly RoomSubject _subject;
         private readonly JsonDiffPatch _jdp;
+        
         public event EventHandler<JsonReceivedEventArgs> OnMoveToEvent;
         public event EventHandler<JsonReceivedEventArgs> OnPowerUpEvent;
         public event EventHandler<JsonReceivedEventArgs> UpgradeTowerEvent;
@@ -42,7 +43,8 @@ namespace WeirdUnitBE.Middleware.JsonHandling
 
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.MOVE_TO)
             {
-                await Task.Run(() => OnMoveToEvent?.Invoke(this, args));                
+                
+                await Task.Run(() => OnMoveToEvent?.Invoke(this, args));                               
                 return;
             }
 
@@ -57,8 +59,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                 await AnalyzeCommandBagAsync(jsonObj, args);     
             }           
         }
-
-        
+    
         private async Task AnalyzeCommandBagAsync(dynamic currentCommand, JsonReceivedEventArgs args)
         {                      
             if(SimilarCommandsByDifferentSenders(currentCommand))
@@ -113,13 +114,6 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             }
 
             return jsonKeys;
-        }
-
-        public static object ConvertObjectToJsonBuffer(object obj)
-        {
-            var messageJson = JsonConvert.SerializeObject(obj, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(messageJson);
-            return buffer;
         }
     }
 }

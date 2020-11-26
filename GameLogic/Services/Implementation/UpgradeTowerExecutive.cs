@@ -14,10 +14,6 @@ namespace WeirdUnitBE.GameLogic
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
-            // GetPayloadFromArgs
-            // GetTowersFromPayload
-            // UpgradeTower
-            // FormatCommand
             dynamic payload = args.jsonObj.payload;
             Position towerPosition = new Position((int)payload.position.X, (int)payload.position.Y);
             Tower upgradableTower = gameState.PositionToTowerDict[towerPosition];

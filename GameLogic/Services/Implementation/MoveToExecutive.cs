@@ -11,14 +11,6 @@ namespace WeirdUnitBE.GameLogic
     {
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
-            // GetPayloadFromArgs
-            // GetTowersFromPayload
-            // ValidateMovementBetweenTowers
-            // GetMovingUnitCountFromTower
-            // DetermineStrategy
-            // ExecuteStrategy
-            // CalculateMovementTimeBetweenTwoTowers
-            // FormatCommand
             (Tower towerFrom, Tower towerTo) = GetTowersFromJsonArgs(args as Object, gameState);
 
             ValidateMovementBetweenTowers(towerFrom, towerTo);
@@ -57,13 +49,13 @@ namespace WeirdUnitBE.GameLogic
 
         private static void ValidateMovementBetweenTowers(Tower towerFrom, Tower towerTo)
         {
-            if(TowersAreNotNeighbours(towerFrom, towerTo))
-            {
-                throw new InvalidMovementException("Towers are not neighbours");  
-            }
             if(MovedToTheSameTower(towerFrom, towerTo))
             {
                 throw new InvalidMovementException("Movement to the same tower is invalid");
+            }
+            if(TowersAreNotNeighbours(towerFrom, towerTo))
+            {
+                throw new InvalidMovementException("Towers are not neighbours");  
             }
         }
 
@@ -108,7 +100,7 @@ namespace WeirdUnitBE.GameLogic
         {
             JsonMessageFormatterTemplate formatter = new JsonMoveToMessageFormatter();
             var buffer = formatter.FormatJsonBufferFromParams(towerFrom, towerTo, timeInSeconds, movingUnitCount);
-            
+
             return buffer;    
         }
     }

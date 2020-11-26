@@ -68,8 +68,7 @@ namespace WeirdUnitBE.Middleware
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
                         Room currentRoom = socketToRoomDict[webSocket];
 
-                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj); // Come back for jsonerror formatter
-
+                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
                         return;
                     }
                     else if (result.MessageType == WebSocketMessageType.Close)
@@ -99,11 +98,16 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
-        public void DeleteRoom(WebSocket currentSocket, WebSocket enemySocket)
+        private string GetConnectionIdFromLobby()
         {
-            socketToRoomDict.TryRemove(currentSocket, out Room removedRoom);
-            socketToRoomDict.TryRemove(enemySocket, out _);
-            roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
+            string connID = String.Empty;
+
+            if (_manager._lobbySockets.Count > 0)
+            {
+                connID = _manager._lobbySockets.FirstOrDefault().Key;
+            }
+
+            return connID;
         }
 
         private async Task HandleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
@@ -142,13 +146,9 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
-        private void ConfigureEventHandler(RoomSubject roomSubject)
+        private static bool IsLobbyEmpty(string enemyConnectionId)
         {
-            jsonHandler = new JsonMessageHandler(roomSubject);
-            jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
-            jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
-            jsonHandler.UpgradeTowerEvent += HandleUpgradeEvent;
-            jsonHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
+            return enemyConnectionId == String.Empty;
         }
 
         private static byte[] GetConnIDCommandBuffer(string connID)
@@ -165,10 +165,13 @@ namespace WeirdUnitBE.Middleware
             return enemySocket;
         }
 
-        private void ClearLobbySocket(string enemyConnectionId, string currentConnectionId)
+        private void ConfigureEventHandler(RoomSubject roomSubject)
         {
-            _manager._lobbySockets.TryRemove(currentConnectionId, out _);
-            _manager._lobbySockets.TryRemove(enemyConnectionId, out _);
+            jsonHandler = new JsonMessageHandler(roomSubject);
+            jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
+            jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
+            jsonHandler.UpgradeTowerEvent += HandleUpgradeEvent;
+            jsonHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
         }
 
         private static byte[] GetInitialGameSateCommandBuffer(string roomId, GameState gameState)
@@ -197,21 +200,39 @@ namespace WeirdUnitBE.Middleware
             return gameStateInfo;
         }
 
-        private static bool IsLobbyEmpty(string enemyConnectionId)
+        private void ClearLobbySocket(string enemyConnectionId, string currentConnectionId)
         {
-            return enemyConnectionId == String.Empty;
+            _manager._lobbySockets.TryRemove(currentConnectionId, out _);
+            _manager._lobbySockets.TryRemove(enemyConnectionId, out _);
         }
 
-        private string GetConnectionIdFromLobby()
+        private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
         {
-            string connID = String.Empty;
+            var buffer = new byte[1024 * 4];
 
-            if (_manager._lobbySockets.Count > 0)
+            while (socket.State == WebSocketState.Open)
             {
-                connID = _manager._lobbySockets.FirstOrDefault().Key;
+                var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
+                    cancellationToken: CancellationToken.None);
+                handleMessage(result, buffer);
             }
+        }
 
-            return connID;
+        public void DeleteRoom(WebSocket currentSocket, WebSocket enemySocket)
+        {
+            socketToRoomDict.TryRemove(currentSocket, out Room removedRoom);
+            socketToRoomDict.TryRemove(enemySocket, out _);
+            roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
+        }     
+
+        private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
+        {
+            string roomId = args.room.roomID;
+            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;  
+            IGameStateExecutable executive = new PowerUpExecutive();
+
+            var buffer = executive.ExecuteCommand(args, gameState);
+            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
         private async void HandleOnArrivedToEvent(object sender, JsonReceivedEventArgs args)
@@ -229,7 +250,7 @@ namespace WeirdUnitBE.Middleware
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             IGameStateExecutable executive = new MoveToExecutive();   
-
+            
             try
             {
                 var buffer = executive.ExecuteCommand(args, gameState);
@@ -239,25 +260,7 @@ namespace WeirdUnitBE.Middleware
             {
                 string clientId = args.room.currentID;
                 await FormatExceptionBufferAndSendToClient(e, clientId);
-            }
-        }
-
-        private async Task SendBufferToClient(dynamic buffer, string clientId)
-        {
-            WebSocket socket = _manager.GetAllSockets()[clientId];
-            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-
-        private async Task FormatBufferFromInfoAndBroadcastToRoom(dynamic info, string roomId)
-        {
-            var buffer = FormatBufferFromInfo(info);
-            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
-        }
-
-        private object FormatBufferFromInfo(dynamic info)
-        {
-            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(info);
-            return buffer;
+            } 
         }
 
         private async void HandleUpgradeEvent(object sender, JsonReceivedEventArgs args)
@@ -265,20 +268,17 @@ namespace WeirdUnitBE.Middleware
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             IGameStateExecutable executive = new UpgradeTowerExecutive();
-
+            
             try
             {
                 var buffer = executive.ExecuteCommand(args, gameState);
                 await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
-
-                //var gameStateInfo = executive.ExecuteCommand(args, gameState);
-                //await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
             }
             catch(InvalidUpgradeException e)
             {
                 string clientId = args.room.currentID;
                 await FormatExceptionBufferAndSendToClient(e, clientId);               
-            }
+            }   
         }
 
         public async Task FormatExceptionBufferAndSendToClient(Exception e, string clientId)
@@ -289,28 +289,10 @@ namespace WeirdUnitBE.Middleware
             await SendBufferToClient(buffer, clientId); 
         }
 
-        private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
+        private async Task SendBufferToClient(dynamic buffer, string clientId)
         {
-            string roomId = args.room.roomID;
-            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;  
-            IGameStateExecutable executive = new PowerUpExecutive();
-
-            var gameStateInfo = executive.ExecuteCommand(args, gameState);
-
-            await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId); 
-        }
-
-        private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
-        {
-            var buffer = new byte[1024 * 4];
-
-            while (socket.State == WebSocketState.Open)
-            {
-                var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
-                    cancellationToken: CancellationToken.None);
-                handleMessage(result, buffer);
-            }
-        }
-
+            WebSocket socket = _manager.GetAllSockets()[clientId];
+            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+        }      
     }
 }
