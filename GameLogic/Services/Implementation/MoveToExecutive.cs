@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.Strategies;
+using WeirdUnitBE.Middleware.JsonHandling;
 
 namespace WeirdUnitBE.GameLogic
 {
@@ -11,7 +12,7 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             // GetPayloadFromArgs
-            // GetTowersFromJsonArgs
+            // GetTowersFromPayload
             // ValidateMovementBetweenTowers
             // GetMovingUnitCountFromTower
             // DetermineStrategy
@@ -31,7 +32,7 @@ namespace WeirdUnitBE.GameLogic
                        
             string uuidFrom = towerFrom.owner;
 
-            return FormatCommand(movementTimeInSeconds, towerTo.position, towerFrom.position, movingUnitCount, towerFrom.unitCount, uuidFrom);
+            return FormatCommand(towerFrom, towerTo, movementTimeInSeconds, movingUnitCount);
         }
 
         private static (Tower, Tower) GetTowersFromJsonArgs(dynamic args, GameState gameState)
@@ -103,21 +104,12 @@ namespace WeirdUnitBE.GameLogic
             return towerFrom.position.DistanceToPosition(towerTo.position);
         }    
       
-        private static dynamic FormatCommand(int timeInSeconds, Position towerToPosition, Position towerFromPosition, int movingUnitCount, int towerFromUnitCount, string uuidFrom)
+        private static dynamic FormatCommand(Tower towerFrom, Tower towerTo, int timeInSeconds, int movingUnitCount)
         {
-            return new
-            {
-                command = Constants.JsonCommands.ServerCommands.MOVE_TO,
-                payload = new
-                {
-                    towerToPosition = towerToPosition,
-                    towerFromPosition = towerFromPosition,
-                    unitCount = movingUnitCount,
-                    uuidFrom = uuidFrom,
-                    timeToArriveInSeconds = timeInSeconds,
-                    towerFromUnitCount = towerFromUnitCount
-                }
-            };
+            JsonMessageFormatterTemplate formatter = new JsonMoveToMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(towerFrom, towerTo, timeInSeconds, movingUnitCount);
+            
+            return buffer;    
         }
     }
 }

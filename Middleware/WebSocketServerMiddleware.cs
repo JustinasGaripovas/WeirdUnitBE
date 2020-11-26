@@ -68,7 +68,7 @@ namespace WeirdUnitBE.Middleware
                         dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
                         Room currentRoom = socketToRoomDict[webSocket];
 
-                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
+                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj); // Come back for jsonerror formatter
 
                         return;
                     }
@@ -218,11 +218,9 @@ namespace WeirdUnitBE.Middleware
         {
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
-
             IGameStateExecutable executive = new ArrivedToExecutive();
-            var gameStateInfo = executive.ExecuteCommand(args, gameState);
 
-            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
+            var buffer = executive.ExecuteCommand(args, gameState);
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
@@ -230,31 +228,23 @@ namespace WeirdUnitBE.Middleware
         {
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
-            
-            IGameStateExecutable executive = new MoveToExecutive();           
+            IGameStateExecutable executive = new MoveToExecutive();   
+
             try
             {
-                var gameStateInfo = executive.ExecuteCommand(args, gameState);
-                await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
+                var buffer = executive.ExecuteCommand(args, gameState);
+                await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
             }
             catch(Exception e)
             {
-                var gameStateInfo = new
-                {
-                    command = Constants.JsonCommands.ServerCommands.EXCEPTION,
-                    payload = new
-                    {
-                        message = e.Message
-                    }
-                };
-                await FormatBufferFromInfoAndSendToClient(gameStateInfo, args.room.currentID);
+                string clientId = args.room.currentID;
+                await FormatExceptionBufferAndSendToClient(e, clientId);
             }
         }
 
-        private async Task FormatBufferFromInfoAndSendToClient(dynamic info, string clientID)
+        private async Task SendBufferToClient(dynamic buffer, string clientId)
         {
-            var buffer = FormatBufferFromInfo(info);
-            WebSocket socket = _manager.GetAllSockets()[clientID];
+            WebSocket socket = _manager.GetAllSockets()[clientId];
             await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
@@ -274,52 +264,40 @@ namespace WeirdUnitBE.Middleware
         {
             string roomId = args.room.roomID;
             GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
-
-            var upgradeInfo = new { position = args.jsonObj.payload.position, type = args.jsonObj.payload.upgradeToType};
-
             IGameStateExecutable executive = new UpgradeTowerExecutive();
 
             try
             {
-                var gameStateInfo = executive.ExecuteCommand(args, gameState);
-                await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
+                var buffer = executive.ExecuteCommand(args, gameState);
+                await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+
+                //var gameStateInfo = executive.ExecuteCommand(args, gameState);
+                //await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId);
             }
             catch(InvalidUpgradeException e)
             {
-                var gameStateInfo = new
-                {
-                    command = Constants.JsonCommands.ServerCommands.EXCEPTION,
-                    payload = new
-                    {
-                        message = e.Message
-                    }
-                };
-                await FormatBufferFromInfoAndSendToClient(gameStateInfo, args.room.currentID);
+                string clientId = args.room.currentID;
+                await FormatExceptionBufferAndSendToClient(e, clientId);               
             }
+        }
+
+        public async Task FormatExceptionBufferAndSendToClient(Exception e, string clientId)
+        {
+            JsonMessageFormatterTemplate formatter = new JsonErrorMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(e);
+
+            await SendBufferToClient(buffer, clientId); 
         }
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
         {
-            Console.WriteLine("Handling PowerUp NOW!");
-            dynamic jsonObj = args.jsonObj;
-            Room room = args.room;
-            var payload = jsonObj.payload;
-            string powerUpType = payload.type;
-
-            GameState gameState = roomIdToRoomsubjectDict[room.roomID].gameState;  
-            var powerUpInfo = new{powerUpType = powerUpType, powerUpOwner = room.currentID};
-
+            string roomId = args.room.roomID;
+            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;  
             IGameStateExecutable executive = new PowerUpExecutive();
-            var affectedTowers = executive.ExecuteCommand(powerUpInfo, gameState);
 
-            var gameStateInfo = new
-            {
-                command = Constants.JsonCommands.ServerCommands.POWER_UP,
-                payload = new {allTowers=affectedTowers}
-            };
+            var gameStateInfo = executive.ExecuteCommand(args, gameState);
 
-            var buffer = JsonMessageHandler.ConvertObjectToJsonBuffer(gameStateInfo);
-            await roomIdToRoomsubjectDict[room.roomID].Broadcast(buffer);
+            await FormatBufferFromInfoAndBroadcastToRoom(gameStateInfo, roomId); 
         }
 
         private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)

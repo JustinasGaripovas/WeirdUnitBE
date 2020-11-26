@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories;
+using WeirdUnitBE.Middleware.JsonHandling;
 
 namespace WeirdUnitBE.GameLogic
 {
@@ -14,7 +15,7 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         {
             // GetPayloadFromArgs
-            // GetTowersFromJsonArgs
+            // GetTowersFromPayload
             // UpgradeTower
             // FormatCommand
             dynamic payload = args.jsonObj.payload;
@@ -54,18 +55,10 @@ namespace WeirdUnitBE.GameLogic
 
         private static object FormatCommand(Tower tower)
         {
-            return new
-            {
-                command = Constants.JsonCommands.ServerCommands.UPGRADE_TOWER,
-                payload = new
-                {
-                    owner = tower.owner,
-                    position = tower.position,
-                    unitCount = tower.unitCount,
-                    neighbours = tower.neighbourTowers,
-                    type = tower.type
-                }
-            };
+            JsonMessageFormatterTemplate formatter = new JsonUpgradeTowerMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(tower);
+
+            return buffer;
         }
     }
 }

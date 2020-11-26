@@ -7,24 +7,37 @@ using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps;
 using WeirdUnitBE.GameLogic.Strategies;
+using WeirdUnitBE.Middleware.JsonHandling;
 
 namespace WeirdUnitBE.GameLogic
 {
     public class PowerUpExecutive : IGameStateExecutable
     {
-        public object ExecuteCommand(dynamic info, GameState gameState)
-        {
-            List<Tower> affectedTowers = new List<Tower>();
-            IPowerUpStrategy strategy;
+        private dynamic payload;
+        private PowerUp powerUp;
+        private IPowerUpStrategy strategy;
+        private List<Tower> targetTowers;
+
+        public object ExecuteCommand(dynamic args, GameState gameState)
+        {       
+            SetPayloadFromArgs(args);
+            DetermineExecutionSettings(gameState);
+            Execute();
+            
+            return FormatCommand(targetTowers);
+        }
+
+        private void SetPayloadFromArgs(dynamic args) {
+            payload = args.jsonObj.payload; 
+        }
+
+        private void DetermineExecutionSettings(GameState gameState) {
             PowerUpCreator powerUpCreator;
-            PowerUp powerUp;
-            List<Tower> targetTowers = new List<Tower>();
+            Console.WriteLine((string)payload.type);
+            string powerUpType = payload.type;
+            string powerUpOwner = payload.uuid;
 
-            string powerUpType = info.powerUpType;
-            string powerUpOwner = info.powerUpOwner;
-
-            switch (powerUpType)
-            {
+            switch(powerUpType) {
                 case Constants.JsonCommands.ClientCommands.ATTACKING_TOWER_POWER_UP:
                     strategy = new AttackingTowerPowerUpStrategy();
                     powerUpCreator = new AttackingTowerPowerUpCreator();
@@ -41,18 +54,23 @@ namespace WeirdUnitBE.GameLogic
                     targetTowers = gameState.GetAllTowers().Where(tower => tower.owner == powerUpOwner).ToList();
                     break;
                 default:
-                    return null;
+                    throw new InvalidPowerUpException("Invalid PowerUp");
             }
 
             powerUp = powerUpCreator.CreatePowerUp();
-            strategy.ExecuteStrategy(powerUp, targetTowers, (_affectedTowers) =>
-            {
-                affectedTowers = _affectedTowers;
-            });
-            
-            gameState.UpdateTowers(affectedTowers);
+        }
 
-            return affectedTowers;
+        private void Execute()
+        {
+            strategy.ExecuteStrategy(powerUp, targetTowers);
+        }
+
+        private object FormatCommand(List<Tower> targetTowers)
+        {
+            JsonMessageFormatterTemplate formatter = new JsonPowerUpMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(targetTowers);
+
+            return buffer;  
         }
     }
 }

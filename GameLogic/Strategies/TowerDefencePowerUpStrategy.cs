@@ -8,12 +8,9 @@ namespace WeirdUnitBE.GameLogic.Strategies
 {
     public class TowerDefencePowerUpStrategy : IPowerUpStrategy
     {
-        public void ExecuteStrategy(PowerUp powerUp, List<Tower> towers, Action<List<Tower>> UpdateGamestate)
+        public void ExecuteStrategy(PowerUp powerUp, List<Tower> towers)
         {
             Console.WriteLine(""+ towers.Count + " Tower Defence Powered Up!");
-            UpdateGamestate(towers);
-            
-            //TODO: DECORATOR PATTERN IS APPROPRIATE HERE
         }
     }
 }

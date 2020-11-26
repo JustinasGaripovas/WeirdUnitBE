@@ -8,6 +8,6 @@ namespace WeirdUnitBE.GameLogic.Strategies
 {
     public interface IPowerUpStrategy
     {
-        void ExecuteStrategy(PowerUp powerUp, List<Tower> towers, Action<List<Tower>> UpdateGamestate);
+        void ExecuteStrategy(PowerUp powerUp, List<Tower> towers);
     }
 }

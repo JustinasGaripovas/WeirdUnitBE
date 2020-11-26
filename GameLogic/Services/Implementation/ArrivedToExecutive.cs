@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.Strategies;
+using WeirdUnitBE.Middleware.JsonHandling;
 
 namespace WeirdUnitBE.GameLogic
 {
@@ -11,7 +12,7 @@ namespace WeirdUnitBE.GameLogic
         public object ExecuteCommand(dynamic args, GameState gameState)
         { 
             // GetPayloadFromArgs
-            // GetTowersFromJsonArgs
+            // GetTowersFromPayload
             // GetCopyOfTower
             // AssignOwnerToTowerFromMemory
             // DetermineStrategy
@@ -31,7 +32,7 @@ namespace WeirdUnitBE.GameLogic
             
             moveToStrategy.ExecuteStrategy(towerFromCopy, towerTo, movingUnitCount);
            
-            return FormatCommand(towerTo.unitCount, towerTo.owner, towerTo.position);
+            return FormatCommand(towerTo);
         }       
 
         private static (Tower, Tower) GetTowersFromJsonArgs(dynamic args, GameState gameState)
@@ -73,18 +74,12 @@ namespace WeirdUnitBE.GameLogic
             return tower1.owner == tower2.owner;
         }
 
-        private static dynamic FormatCommand(int unitCount, string owner, Position position)
+        private static dynamic FormatCommand(Tower towerTo)
         {
-            return new
-            {
-                command = Constants.JsonCommands.ServerCommands.ARRIVED_TO,
-                payload = new
-                {
-                    position = position,
-                    unitCount = unitCount,
-                    owner = owner
-                }
-            };
+            JsonMessageFormatterTemplate formatter = new JsonArrivedToMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(towerTo); 
+            
+            return buffer;           
         }
     }
 }

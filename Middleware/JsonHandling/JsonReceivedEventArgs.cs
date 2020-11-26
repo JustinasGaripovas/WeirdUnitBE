@@ -8,10 +8,10 @@ namespace WeirdUnitBE.Middleware.JsonHandling
         public Room room { get; set; }
         public dynamic jsonObj { get; set; }
 
-        public JsonReceivedEventArgs(Room _room, dynamic _jsonObj)
+        public JsonReceivedEventArgs(Room room, dynamic jsonObj)
         {
-            room = _room;
-            jsonObj = _jsonObj;
+            this.room = room;
+            this.jsonObj = jsonObj;
         }
     }
 }
