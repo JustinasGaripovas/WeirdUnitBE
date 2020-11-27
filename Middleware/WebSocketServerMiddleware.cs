@@ -43,43 +43,9 @@ namespace WeirdUnitBE.Middleware
 
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();               
                 string currentConnectionId = _manager.AddSocketToSocketPool(webSocket);
+
                 await HandleGameStart(currentConnectionId);
-                
-                await ReceiveMessage(webSocket, async (result, buffer) =>
-                {
-                    if (result.MessageType == WebSocketMessageType.Text)
-                    {
-                        string stringMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
-                        ConsoleLogger.LogToConsole("Message Received");
-                        ConsoleLogger.LogToConsole($"Message: {stringMessage}");
-
-                        string stringJson = ConvertToJsonString(stringMessage);                
-                        
-                        Room currentRoom = socketToRoomDict[webSocket];
-                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(stringJson);
-                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
-                    }
-                    else if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        ConsoleLogger.LogToConsole("Received Close Message from " + currentConnectionId);
-
-                        _manager.RemoveSocketFromAllPools(currentConnectionId);
-
-                        if(!WebSocketIsClosed(webSocket))
-                        {
-                            await CloseWebSocket(webSocket, result);
-
-                            if(WebSocketBelongsToARoom(webSocket))
-                            {
-                                WebSocket enemySocket = GetEnemyWebSocket(webSocket);
-                                await CloseWebSocket(enemySocket, result);
-                                DeleteRoom(webSocket, enemySocket);
-                            }
-                        }                      
-                    }
-                    return;
-                });
+                await ReceiveAndHandleMessages(currentConnectionId);
             }
             else
             {
@@ -96,10 +62,10 @@ namespace WeirdUnitBE.Middleware
             }
             catch(Exception e)
             {
-                _manager.AddClientToLobbyPool(currentConnectionId);                
+                _manager.AddClientToLobbyPool(currentConnectionId);
                 await FormatExceptionBufferAndSendToClient(e, currentConnectionId);
                 
-                ConsoleLogger.LogToConsole(e.Message);               
+                ConsoleLogger.LogToConsole(e.Message);
             }         
         }
 
@@ -121,23 +87,22 @@ namespace WeirdUnitBE.Middleware
 
         public async Task InitializeGameStart(string currentConnectionId, string enemyConnectionId)
         {
+            _manager.RemoveSocketsFromLobbyPool(currentConnectionId, enemyConnectionId);
+
             await SendConnectionIdToClient(currentConnectionId);
             await SendConnectionIdToClient(enemyConnectionId); 
 
             var gameState = GenerateGameState(currentConnectionId, enemyConnectionId);  
             WebSocket currentWebsocket = _manager.GetSocketFromSocketPool(currentConnectionId);  
-            WebSocket enemySocket = _manager.GetSocketFromLobby(enemyConnectionId);            
+            WebSocket enemySocket = _manager.GetSocketFromSocketPool(enemyConnectionId);            
             RoomSubject roomSubject = new RoomSubject
             (
                 gameState,
                 new UserSocketObserver(currentWebsocket),
                 new UserSocketObserver(enemySocket)
             );
-
-            _manager.RemoveSocketsFromLobbyPool(currentConnectionId, enemyConnectionId);
                      
             var roomId = Room.GenerateRoomUUID();
-
             socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
             socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
             roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
@@ -187,16 +152,59 @@ namespace WeirdUnitBE.Middleware
             await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
-        private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
+        private async Task ReceiveAndHandleMessages(string connectionId)
         {
             var buffer = new byte[1024 * 4];
+            WebSocket webSocket = _manager.GetSocketFromSocketPool(connectionId);
 
-            while (socket.State == WebSocketState.Open)
+            while(WebSocketIsOpened(webSocket))
             {
-                var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
-                    cancellationToken: CancellationToken.None);
-                handleMessage(result, buffer);
+                var result = await ReceiveMessage(webSocket, buffer);
+                await HandleMessage(connectionId, result, buffer);
             }
+        }
+
+        private bool WebSocketIsOpened(WebSocket webSocket)
+        {
+            return webSocket.State == WebSocketState.Open;   
+        }
+
+        private async Task<WebSocketReceiveResult> ReceiveMessage(WebSocket webSocket, byte[] buffer)
+        {
+            WebSocketReceiveResult result = await webSocket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
+                cancellationToken: CancellationToken.None);
+
+            return result;
+        }
+
+        private async Task HandleMessage(string connectionId, WebSocketReceiveResult result, byte[] buffer)
+        {
+            if (result.MessageType == WebSocketMessageType.Text)
+            {
+                string stringMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
+                ConsoleLogger.LogToConsole("Message Received");
+                ConsoleLogger.LogToConsole($"Message: {stringMessage}");
+
+                await HandleTextMessage(connectionId, stringMessage);    
+            }
+            else if (result.MessageType == WebSocketMessageType.Close)
+            {
+                ConsoleLogger.LogToConsole("Received Close Message from " + connectionId);
+
+                await HandleCloseMessage(connectionId, result);                                    
+            }
+        }
+
+        private async Task HandleTextMessage(string connectionId, string stringMessage)
+        {
+            string stringJson = ConvertToJsonString(stringMessage); 
+
+            WebSocket webSocket = _manager.GetSocketFromSocketPool(connectionId);                     
+            Room currentRoom = socketToRoomDict[webSocket];
+            dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(stringJson);
+
+            await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
         }
 
         private string ConvertToJsonString(string stringMessage)
@@ -205,6 +213,24 @@ namespace WeirdUnitBE.Middleware
             string stringJson = adapter.ConvertToJson(stringMessage);
 
             return stringJson;
+        }
+
+        private async Task HandleCloseMessage(string connectionId, WebSocketReceiveResult result)
+        {
+            WebSocket webSocket = _manager.GetSocketFromSocketPool(connectionId);
+            _manager.RemoveSocketFromAllPools(connectionId);
+
+            if(!WebSocketIsClosed(webSocket))
+            {
+                await CloseWebSocket(webSocket, result);
+
+                if(WebSocketBelongsToARoom(webSocket))
+                {
+                    WebSocket enemySocket = GetEnemyWebSocket(webSocket);
+                    await CloseWebSocket(enemySocket, result);
+                    DeleteRoom(webSocket, enemySocket);
+                }
+            } 
         }
 
         public bool WebSocketIsClosed(WebSocket webSocket)
@@ -234,6 +260,8 @@ namespace WeirdUnitBE.Middleware
             socketToRoomDict.TryRemove(enemySocket, out _);
             roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
         } 
+
+        #region Event Handling
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
         {
@@ -272,10 +300,11 @@ namespace WeirdUnitBE.Middleware
             catch(InvalidUpgradeException e)
             {
                 string clientId = args.room.currentID;
-
                 await FormatExceptionBufferAndSendToClient(e, clientId);               
             } 
         }
+
+        #endregion
 
         public async Task FormatExceptionBufferAndSendToClient(Exception e, string clientId)
         {
