@@ -34,40 +34,25 @@ namespace WeirdUnitBE.GameLogic
             tower = newTower;
         }
 
+        private static AbstractFactory CreateTowerFactory(string upgradableTowerType)
+        {
+            if (upgradableTowerType.Contains("Default"))
+                return new DefaultTowerFactory();
+
+            if (upgradableTowerType.Contains("Fast"))
+                return new FastTowerFactory();
+            
+            return new StrongTowerFactory();
+        }
+
         private static Tower CreateEmptyTowerWithType(string upgradableTowerType)
         {
-            AbstractFactory defaultFactory = new DefaultTowerFactory();
-            AbstractFactory fastFactory = new FastTowerFactory();
-            AbstractFactory strongFactory = new StrongTowerFactory();
+            AbstractFactory towerFactory = CreateTowerFactory(upgradableTowerType);
 
-            if (String.Compare(upgradableTowerType, "DefaultRegeneratingTower") == 0)
-            {
-                return defaultFactory.CreateRegeneratingTower();
-            }
-            else if (String.Compare(upgradableTowerType, "DefaultAttackingTower") == 0)
-            {
-                return defaultFactory.CreateAttackingTower();
-            }
-            else if (String.Compare(upgradableTowerType, "FastRegeneratingTower") == 0)
-            {
-                return fastFactory.CreateRegeneratingTower();
-            }
-            else if (String.Compare(upgradableTowerType, "FastAttackingTower") == 0)
-            {
-                return fastFactory.CreateAttackingTower();
-            }
-            else if (String.Compare(upgradableTowerType, "StrongRegeneratingTower") == 0)
-            {
-                return strongFactory.CreateRegeneratingTower();
-            }
-            else if (String.Compare(upgradableTowerType, "StrongAttackingTower") == 0)
-            {
-                return strongFactory.CreateAttackingTower();
-            }
-            else
-            {
-                throw new InvalidUpgradeException("Cannot resolve Upgrade type");
-            }
+            if (upgradableTowerType.Contains("Regenerating"))
+                return towerFactory.CreateRegeneratingTower();
+            
+            return towerFactory.CreateAttackingTower();
         }
 
         private static object FormatCommand(Tower tower)
