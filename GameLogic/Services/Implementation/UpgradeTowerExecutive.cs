@@ -7,6 +7,7 @@ using WeirdUnitBE.GameLogic.TowerPackage.Towers;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories;
 using WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories;
 using WeirdUnitBE.Middleware.JsonHandling;
+using System.Text.RegularExpressions;
 
 namespace WeirdUnitBE.GameLogic
 {
@@ -34,26 +35,29 @@ namespace WeirdUnitBE.GameLogic
             tower = newTower;
         }
 
-        private static AbstractFactory CreateTowerFactory(string upgradableTowerType)
+        private static Tower CreateEmptyTowerWithType(string upgradableTowerType)
         {
-            if (upgradableTowerType.Contains("Default"))
+            var strSplitByCamelCase = SplitCamelCase(upgradableTowerType).ToArray<string>();
+
+            string concreteFactoryType = strSplitByCamelCase[0];
+            AbstractFactory towerFactory = CreateTowerFactory(concreteFactoryType);
+
+            string concreteTowerType = strSplitByCamelCase[1];
+            Tower tower = towerFactory.CreateConcreteTower(concreteTowerType);
+            
+            return tower;
+        }
+
+        private static AbstractFactory CreateTowerFactory(string concreteFactoryType)
+        {
+            if (concreteFactoryType == "Default")
                 return new DefaultTowerFactory();
 
-            if (upgradableTowerType.Contains("Fast"))
+            if (concreteFactoryType == "Fast")
                 return new FastTowerFactory();
             
             return new StrongTowerFactory();
-        }
-
-        private static Tower CreateEmptyTowerWithType(string upgradableTowerType)
-        {
-            AbstractFactory towerFactory = CreateTowerFactory(upgradableTowerType);
-
-            if (upgradableTowerType.Contains("Regenerating"))
-                return towerFactory.CreateRegeneratingTower();
-            
-            return towerFactory.CreateAttackingTower();
-        }
+        }     
 
         private static object FormatCommand(Tower tower)
         {
@@ -62,6 +66,27 @@ namespace WeirdUnitBE.GameLogic
 
             return buffer;
         }
+
+        public static IEnumerable<string> SplitCamelCase(string source)
+        {
+            string pattern = UpperCaseCharRegex() + LowerCaseCharRegexRepeated();
+            var matches = Regex.Matches(source, pattern);
+            foreach (Match match in matches)
+            {
+                yield return match.Value;
+            }
+        }
+
+        public static string UpperCaseCharRegex()
+        {
+            return @"[A-Z]";
+        }
+
+        public static string LowerCaseCharRegexRepeated()
+        {
+            return @"[a-z]*";
+        }
+
     }
 }
 
