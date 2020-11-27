@@ -69,6 +69,7 @@ namespace WeirdUnitBE.Middleware
                         Room currentRoom = socketToRoomDict[webSocket];
 
                         await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
+                        
                         return;
                     }
                     else if (result.MessageType == WebSocketMessageType.Close)
@@ -227,58 +228,44 @@ namespace WeirdUnitBE.Middleware
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
         {
-            string roomId = args.room.roomID;
-            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;  
-            IGameStateExecutable executive = new PowerUpExecutive();
-
-            var buffer = executive.ExecuteCommand(args, gameState);
-            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+            IGameStateExecutable executive = new ArrivedToExecutive();
+            await ExecuteCommandAndNotifyClients(executive, args);
         }
 
         private async void HandleOnArrivedToEvent(object sender, JsonReceivedEventArgs args)
         {
-            string roomId = args.room.roomID;
-            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             IGameStateExecutable executive = new ArrivedToExecutive();
-
-            var buffer = executive.ExecuteCommand(args, gameState);
-            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
+            await ExecuteCommandAndNotifyClients(executive, args);
         }
 
         private async void HandleOnMoveToEvent(object sender, JsonReceivedEventArgs args)
         {
-            string roomId = args.room.roomID;
-            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
             IGameStateExecutable executive = new MoveToExecutive();   
-            
-            try
-            {
-                var buffer = executive.ExecuteCommand(args, gameState);
-                await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
-            }
-            catch(Exception e)
-            {
-                string clientId = args.room.currentID;
-                await FormatExceptionBufferAndSendToClient(e, clientId);
-            } 
+            await ExecuteCommandAndNotifyClients(executive, args); 
         }
 
         private async void HandleUpgradeEvent(object sender, JsonReceivedEventArgs args)
-        {
-            string roomId = args.room.roomID;
-            GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
+        { 
             IGameStateExecutable executive = new UpgradeTowerExecutive();
-            
+            await ExecuteCommandAndNotifyClients(executive, args); 
+        }
+
+        private async Task ExecuteCommandAndNotifyClients(IGameStateExecutable executive, JsonReceivedEventArgs args)
+        {
             try
             {
-                var buffer = executive.ExecuteCommand(args, gameState);
+                string roomId = args.room.roomID;
+                GameState gameState = roomIdToRoomsubjectDict[roomId].gameState;
+
+                var buffer = executive.ExecuteCommand(args, gameState); // Can throw exception       
                 await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
             }
             catch(InvalidUpgradeException e)
             {
                 string clientId = args.room.currentID;
+
                 await FormatExceptionBufferAndSendToClient(e, clientId);               
-            }   
+            } 
         }
 
         public async Task FormatExceptionBufferAndSendToClient(Exception e, string clientId)
