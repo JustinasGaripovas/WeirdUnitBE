@@ -30,5 +30,21 @@ namespace WeirdUnitBE.Middleware
         {
             _lobbySockets.TryAdd(connId, socket);
         }
+
+        public void RemoveSocketFromAllPools(string connId)
+        {
+            RemoveSocketFromLobbyPool(connId);
+            RemoveSocketFromSocketPool(connId);
+        }
+
+        private void RemoveSocketFromLobbyPool(string connId)
+        {
+            _lobbySockets.TryRemove(connId, out _);
+        }
+
+        private void RemoveSocketFromSocketPool(string connId)
+        {
+            _sockets.TryRemove(connId, out _);
+        }
     }
 }

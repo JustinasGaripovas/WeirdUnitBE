@@ -76,20 +76,20 @@ namespace WeirdUnitBE.Middleware
                     {
                         Console.WriteLine("Received Close Message from " + currentConnectionId);
 
-                        _manager.GetAllSockets().TryRemove(currentConnectionId, out _);
-                        _manager._lobbySockets.TryRemove(currentConnectionId, out _);
+                        _manager.RemoveSocketFromAllPools(currentConnectionId);
 
-                        if (webSocket.State == WebSocketState.Closed) { return; }
+                        if(!WebSocketIsClosed(webSocket))
+                        {
+                            await CloseWebSocket(webSocket, result);
 
-                        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-
-                        if (!socketToRoomDict.ContainsKey(webSocket)) { return; }
-
-                        WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket;
-                        await enemySocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-
-                        DeleteRoom(webSocket, enemySocket);
-                        return;
+                            if(WebSocketBelongsToARoom(webSocket))
+                            {
+                                WebSocket enemySocket = GetEnemyWebSocket(webSocket);
+                                await CloseWebSocket(enemySocket, result);
+                                DeleteRoom(webSocket, enemySocket);
+                            }
+                        }
+                        return;                       
                     }
                 });
             }
@@ -97,6 +97,27 @@ namespace WeirdUnitBE.Middleware
             {
                 await _next(context);
             }
+        }
+
+        public bool WebSocketIsClosed(WebSocket webSocket)
+        {
+            return webSocket.State == WebSocketState.Closed;
+        }
+
+        public bool WebSocketBelongsToARoom(WebSocket webSocket)
+        {
+            return socketToRoomDict.ContainsKey(webSocket);
+        }
+
+        public async Task CloseWebSocket(WebSocket webSocket, WebSocketReceiveResult receiveResult)
+        {
+            await webSocket.CloseAsync(receiveResult.CloseStatus.Value, receiveResult.CloseStatusDescription, CancellationToken.None);
+        }
+
+        public WebSocket GetEnemyWebSocket(WebSocket webSocket)
+        {
+            WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket;
+            return enemySocket;
         }
 
         private string GetConnectionIdFromLobby()
@@ -228,7 +249,7 @@ namespace WeirdUnitBE.Middleware
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
         {
-            IGameStateExecutable executive = new ArrivedToExecutive();
+            IGameStateExecutable executive = new PowerUpExecutive();
             await ExecuteCommandAndNotifyClients(executive, args);
         }
 
