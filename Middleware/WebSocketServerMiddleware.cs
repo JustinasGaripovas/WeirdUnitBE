@@ -25,11 +25,8 @@ namespace WeirdUnitBE.Middleware
     {
         private readonly RequestDelegate _next;
         private WebSocketServerManager _manager;
-
         private ConcurrentDictionary<WebSocket, Room> socketToRoomDict = new ConcurrentDictionary<WebSocket, Room>();
-
         private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
-
         private JsonMessageHandler jsonHandler;
         
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
