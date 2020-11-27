@@ -43,8 +43,7 @@ namespace WeirdUnitBE.Middleware
 
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();               
                 string currentConnectionId = _manager.AddSocketToSocketPool(webSocket);
-                await HandleGameStart(currentConnectionId); 
-                _manager.AddSocketToLobbyPool(webSocket, currentConnectionId);                              
+                await HandleGameStart(currentConnectionId);
                 
                 await ReceiveMessage(webSocket, async (result, buffer) =>
                 {
@@ -97,6 +96,9 @@ namespace WeirdUnitBE.Middleware
             }
             catch(Exception e)
             {
+                _manager.AddClientToLobbyPool(currentConnectionId);                
+                await FormatExceptionBufferAndSendToClient(e, currentConnectionId);
+                
                 ConsoleLogger.LogToConsole(e.Message);               
             }         
         }

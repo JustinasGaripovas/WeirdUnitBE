@@ -54,6 +54,12 @@ namespace WeirdUnitBE.Middleware
             _lobbySockets.TryAdd(connId, webSocket);
         }
 
+        public void AddClientToLobbyPool(string connId)
+        {
+            WebSocket webSocket = GetSocketFromSocketPool(connId);
+            _lobbySockets.TryAdd(connId, webSocket);
+        }
+
         public string AddSocket(WebSocket socket)
         {
             string connId = Guid.NewGuid().ToString();
