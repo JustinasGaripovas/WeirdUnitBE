@@ -9,32 +9,39 @@ namespace WeirdUnitBE.Middleware.XmlHandling
 {
     public class Adapter
     {
-        public bool IsJson(string input)
+        public string ConvertToJson(string stringMessage)
+        {   
+            string stringJson;
+            if(!IsJson(stringMessage))
+            {
+                XmlDocument xmldocument = new XmlDocument();
+                xmldocument.LoadXml(stringMessage);
+
+                stringJson = JsonConvert.SerializeXmlNode(xmldocument);
+            }
+            else
+            {
+                stringJson = stringMessage;
+            }
+
+            return stringJson;
+        }
+
+        private bool IsJson(string input)
         {
             input = input.Trim();
             return InputWrappedInCurlyBrackets(input) || InputWrappedInSquareBrackets(input);
         }
 
-        public bool InputWrappedInCurlyBrackets(string input)
+        private bool InputWrappedInCurlyBrackets(string input)
         {
             return input.StartsWith("{") && input.EndsWith("}");
         }
 
-        public bool InputWrappedInSquareBrackets(string input)
+        private bool InputWrappedInSquareBrackets(string input)
         {
             return input.StartsWith("[") && input.EndsWith("]");
         }
 
-        public string ConvertToJson(string xmlString)
-        {   
-            XmlDocument xmldocument = new XmlDocument();
-            xmldocument.LoadXml(xmlString);
-
-            string jsonString = JsonConvert.SerializeXmlNode(xmldocument);
-
-            return jsonString;
-        }
-
     }
-
 }

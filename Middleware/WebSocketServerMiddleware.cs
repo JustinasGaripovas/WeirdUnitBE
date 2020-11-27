@@ -42,39 +42,31 @@ namespace WeirdUnitBE.Middleware
         {
             if (context.Request.Path == Constants.RoutingConstants.WEBSOCKET_REQUEST_PATH && context.WebSockets.IsWebSocketRequest)
             {
-                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                Console.WriteLine("WebSocket Connected");
+                ConsoleLogger.LogToConsole("WebSocket Connected");
 
-                string enemyConnectionId = GetConnectionIdFromLobby();
-                string currentConnectionId = _manager.AddSocket(webSocket);
-
-                await HandleGameStart(enemyConnectionId, currentConnectionId, webSocket);
+                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();               
+                string currentConnectionId = _manager.AddSocketToSocketPool(webSocket);
+                await HandleGameStart(currentConnectionId); 
+                _manager.AddSocketToLobbyPool(webSocket, currentConnectionId);                              
                 
                 await ReceiveMessage(webSocket, async (result, buffer) =>
                 {
                     if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        string stringMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-                        Console.WriteLine("Message Received");
-                        Console.WriteLine($"Message: {message}");
+                        ConsoleLogger.LogToConsole("Message Received");
+                        ConsoleLogger.LogToConsole($"Message: {stringMessage}");
 
-                        Adapter adapter = new Adapter();
-                        if(!adapter.IsJson(message))
-                        {
-                            message = adapter.ConvertToJson(message);
-                        }
-
-                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(message);
-                        Room currentRoom = socketToRoomDict[webSocket];
-
-                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
+                        string stringJson = ConvertToJsonString(stringMessage);                
                         
-                        return;
+                        Room currentRoom = socketToRoomDict[webSocket];
+                        dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(stringJson);
+                        await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
                     }
                     else if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        Console.WriteLine("Received Close Message from " + currentConnectionId);
+                        ConsoleLogger.LogToConsole("Received Close Message from " + currentConnectionId);
 
                         _manager.RemoveSocketFromAllPools(currentConnectionId);
 
@@ -88,9 +80,9 @@ namespace WeirdUnitBE.Middleware
                                 await CloseWebSocket(enemySocket, result);
                                 DeleteRoom(webSocket, enemySocket);
                             }
-                        }
-                        return;                       
+                        }                      
                     }
+                    return;
                 });
             }
             else
@@ -99,92 +91,84 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
-        public bool WebSocketIsClosed(WebSocket webSocket)
+        private async Task HandleGameStart(string currentConnectionId)
         {
-            return webSocket.State == WebSocketState.Closed;
-        }
-
-        public bool WebSocketBelongsToARoom(WebSocket webSocket)
-        {
-            return socketToRoomDict.ContainsKey(webSocket);
-        }
-
-        public async Task CloseWebSocket(WebSocket webSocket, WebSocketReceiveResult receiveResult)
-        {
-            await webSocket.CloseAsync(receiveResult.CloseStatus.Value, receiveResult.CloseStatusDescription, CancellationToken.None);
-        }
-
-        public WebSocket GetEnemyWebSocket(WebSocket webSocket)
-        {
-            WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket;
-            return enemySocket;
-        }
-
-        private string GetConnectionIdFromLobby()
-        {
-            string connID = String.Empty;
-
-            if (_manager._lobbySockets.Count > 0)
+            try
             {
-                connID = _manager._lobbySockets.FirstOrDefault().Key;
+                string enemyConnectionId = FindEnemyConnectionId();
+                await InitializeGameStart(currentConnectionId, enemyConnectionId);
+            }
+            catch(Exception e)
+            {
+                ConsoleLogger.LogToConsole(e.Message);               
+            }         
+        }
+
+        private string FindEnemyConnectionId()
+        {
+            string enemyConnectionId = _manager.GetConnectionIdFromLobby();    
+            if(!EnemyFound(enemyConnectionId))
+            {
+                throw new EnemyNotFoundException("Still waiting for another player to join the room...");
             }
 
-            return connID;
+            return enemyConnectionId;
         }
 
-        private async Task HandleGameStart(string enemyConnectionId, string currentConnectionId, WebSocket currentWebsocket)
+        private static bool EnemyFound(string enemyConnectionId)
         {
-            if (!IsLobbyEmpty(enemyConnectionId))
-            {
-                var gameStateDirector = new GameStateDirector(new GameStateBuilder(), currentConnectionId, enemyConnectionId );
-                var gameState = gameStateDirector.GetResult();
-
-                var currentIDBuffer = GetConnIDCommandBuffer(currentConnectionId);
-                await currentWebsocket.SendAsync(currentIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                var enemySocket = GetEnemySocket(enemyConnectionId);
-                var enemyIDBuffer = GetConnIDCommandBuffer(enemyConnectionId);
-                await enemySocket.SendAsync(enemyIDBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
- 
-                var roomId = Room.GenerateRoomUUID();
-                socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
-                socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
-
-                RoomSubject roomSubject = new RoomSubject
-                (
-                    gameState,
-                    new UserSocketObserver(currentWebsocket),
-                    new UserSocketObserver(enemySocket)
-                );
-                
-                roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
-
-                ConfigureEventHandler(roomSubject);
-                
-                var buffer = GetInitialGameSateCommandBuffer(roomId, gameState);
-                await roomSubject.Broadcast(buffer);
-
-                ClearLobbySocket(enemyConnectionId, currentConnectionId);
-            }
+            return enemyConnectionId != String.Empty;
         }
 
-        private static bool IsLobbyEmpty(string enemyConnectionId)
+        public async Task InitializeGameStart(string currentConnectionId, string enemyConnectionId)
         {
-            return enemyConnectionId == String.Empty;
+            await SendConnectionIdToClient(currentConnectionId);
+            await SendConnectionIdToClient(enemyConnectionId); 
+
+            var gameState = GenerateGameState(currentConnectionId, enemyConnectionId);  
+            WebSocket currentWebsocket = _manager.GetSocketFromSocketPool(currentConnectionId);  
+            WebSocket enemySocket = _manager.GetSocketFromLobby(enemyConnectionId);            
+            RoomSubject roomSubject = new RoomSubject
+            (
+                gameState,
+                new UserSocketObserver(currentWebsocket),
+                new UserSocketObserver(enemySocket)
+            );
+
+            _manager.RemoveSocketsFromLobbyPool(currentConnectionId, enemyConnectionId);
+                     
+            var roomId = Room.GenerateRoomUUID();
+
+            socketToRoomDict.TryAdd(currentWebsocket, new Room(currentConnectionId, enemyConnectionId, roomId, enemySocket));
+            socketToRoomDict.TryAdd(enemySocket, new Room(enemyConnectionId, currentConnectionId, roomId, currentWebsocket));
+            roomIdToRoomsubjectDict.TryAdd(roomId, roomSubject);
+
+            ConfigureEventHandler(roomSubject);
+
+            await BroadcastInitialGameStateToRoom(gameState, roomId);
         }
 
-        private static byte[] GetConnIDCommandBuffer(string connID)
+        private async Task SendConnectionIdToClient(string connectionId)
         {
-            var connIDInfo = new { command = Constants.JsonCommands.ServerCommands.CONN_ID, payload = connID };
+            JsonMessageFormatterTemplate connIdFormatter = new JsonConnectionIdMessageFormatter();
 
-            var messageJson = JsonConvert.SerializeObject(connIDInfo, Formatting.Indented);
-            return Encoding.UTF8.GetBytes(messageJson);
+            var connectionIdBuffer = connIdFormatter.FormatJsonBufferFromParams(connectionId);
+            await SendBufferToClient(connectionIdBuffer, connectionId);
         }
 
-        private WebSocket GetEnemySocket(string enemyConnectionId)
+        private async Task SendBufferToClient(dynamic buffer, string clientId)
         {
-            WebSocket enemySocket = _manager._lobbySockets[enemyConnectionId];
-            return enemySocket;
+            WebSocket socket = _manager.GetAllSockets()[clientId];
+            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+        } 
+
+        private GameState GenerateGameState(string client1, string client2)
+        {
+            GameStateBuilder gameStateBuilder = new GameStateBuilder();
+            var gameStateDirector = new GameStateDirector(gameStateBuilder, client1, client2);
+            GameState gameState = gameStateDirector.GetResult();
+
+            return gameState;
         }
 
         private void ConfigureEventHandler(RoomSubject roomSubject)
@@ -196,36 +180,12 @@ namespace WeirdUnitBE.Middleware
             jsonHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
         }
 
-        private static byte[] GetInitialGameSateCommandBuffer(string roomId, GameState gameState)
+        private async Task BroadcastInitialGameStateToRoom(GameState gameState, string roomId)
         {
-            var gameStateInfo = GenerateInitialGamestateCommand(roomId, gameState);
+            JsonMessageFormatterTemplate formatter = new JsonInitialGameStateMessageFormatter();
+            var buffer = formatter.FormatJsonBufferFromParams(roomId, gameState);
 
-            var messageJson = JsonConvert.SerializeObject(gameStateInfo, Formatting.Indented);
-            var buffer = Encoding.UTF8.GetBytes(messageJson);
-            return buffer;
-        }
-
-        private static object GenerateInitialGamestateCommand(string roomId, GameState gameState)
-        {
-            var gameStateInfo = new
-            {
-                command = Constants.JsonCommands.ServerCommands.INITIAL,
-                payload = new
-                {
-                    roomId = roomId,
-                    mapX = gameState.Get_MAP_DIMENSIONS().X,
-                    mapY = gameState.Get_MAP_DIMENSIONS().Y,
-                    allTowers = gameState.GetAllTowers(),
-                    allPowerUps = gameState.GetAllPowerUps()
-                }
-            };
-            return gameStateInfo;
-        }
-
-        private void ClearLobbySocket(string enemyConnectionId, string currentConnectionId)
-        {
-            _manager._lobbySockets.TryRemove(currentConnectionId, out _);
-            _manager._lobbySockets.TryRemove(enemyConnectionId, out _);
+            await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
         }
 
         private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
@@ -240,12 +200,41 @@ namespace WeirdUnitBE.Middleware
             }
         }
 
+        private string ConvertToJsonString(string stringMessage)
+        {
+            Adapter adapter = new Adapter();
+            string stringJson = adapter.ConvertToJson(stringMessage);
+
+            return stringJson;
+        }
+
+        public bool WebSocketIsClosed(WebSocket webSocket)
+        {
+            return webSocket.State == WebSocketState.Closed;
+        }
+
+        public async Task CloseWebSocket(WebSocket webSocket, WebSocketReceiveResult receiveResult)
+        {
+            await webSocket.CloseAsync(receiveResult.CloseStatus.Value, receiveResult.CloseStatusDescription, CancellationToken.None);
+        }
+
+        public bool WebSocketBelongsToARoom(WebSocket webSocket)
+        {
+            return socketToRoomDict.ContainsKey(webSocket);
+        }
+
+        public WebSocket GetEnemyWebSocket(WebSocket webSocket)
+        {
+            WebSocket enemySocket = socketToRoomDict[webSocket].enemyWebSocket;
+            return enemySocket;
+        }
+
         public void DeleteRoom(WebSocket currentSocket, WebSocket enemySocket)
         {
             socketToRoomDict.TryRemove(currentSocket, out Room removedRoom);
             socketToRoomDict.TryRemove(enemySocket, out _);
             roomIdToRoomsubjectDict.TryRemove(removedRoom.roomID, out _);
-        }     
+        } 
 
         private async void HandleOnPowerUpEvent(object sender, JsonReceivedEventArgs args)
         {
@@ -295,12 +284,6 @@ namespace WeirdUnitBE.Middleware
             var buffer = formatter.FormatJsonBufferFromParams(e);
 
             await SendBufferToClient(buffer, clientId); 
-        }
-
-        private async Task SendBufferToClient(dynamic buffer, string clientId)
-        {
-            WebSocket socket = _manager.GetAllSockets()[clientId];
-            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-        }      
+        }         
     }
 }
