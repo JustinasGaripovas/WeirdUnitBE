@@ -6,4 +6,9 @@ public static class ConsoleLogger
     {
         Console.WriteLine(stringMessage);
     }
+    
+    public static void LogToConsole(int intMessage)
+    {
+        Console.WriteLine(intMessage);
+    }
 }
