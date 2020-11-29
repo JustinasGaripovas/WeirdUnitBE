@@ -297,7 +297,7 @@ namespace WeirdUnitBE.Middleware
                 var buffer = executive.ExecuteCommand(args, gameState); // Can throw exception       
                 await roomIdToRoomsubjectDict[roomId].Broadcast(buffer);
             }
-            catch(Exeption e)
+            catch(Exception e)
             {
                 string clientId = args.room.currentID;
                 await FormatExceptionBufferAndSendToClient(e, clientId);               
