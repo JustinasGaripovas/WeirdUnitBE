@@ -20,17 +20,15 @@ namespace WeirdUnitBE.GameLogic.Strategies
             if (movingUnitCount > towerTo.unitCount)
             {
                 towerTo.owner = towerFrom.owner;
-                towerTo.unitCount = Math.Abs(towerTo.unitCount - movingUnitCount);
             }
             else if (movingUnitCount == towerTo.unitCount)
             {
                 towerTo.owner = String.Empty;
-                towerTo.unitCount = 0;
             }
-            else
-            {
-                towerTo.unitCount -= movingUnitCount;
-            }
+            
+
+            towerTo.unitCount = Math.Abs(towerTo.unitCount - movingUnitCount);
+
         }
     }
 }
