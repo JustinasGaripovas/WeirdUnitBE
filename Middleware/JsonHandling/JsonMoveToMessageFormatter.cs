@@ -25,7 +25,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                     unitCount = movingUnitCount,
                     uuidFrom = towerFrom.owner,
                     timeToArriveInSeconds = movementTimeInSeconds,
-                    towerFromUnitCount = movingUnitCount
+                    towerFromUnitCount = towerFrom.unitCount
                 }
             };
 
