@@ -17,13 +17,16 @@ namespace WeirdUnitBE.GameLogic
         {
             dynamic payload = args.jsonObj.payload;
             Position towerPosition = new Position((int)payload.position.X, (int)payload.position.Y);
-            Tower upgradableTower = gameState.PositionToTowerDict[towerPosition];
+            Tower upgradableTower = gameState.GetTowerFromPosition(towerPosition);
 
-            UpgradeTower(payload, ref upgradableTower);
+            upgradableTower = UpgradeTower(payload, upgradableTower);
+
+            gameState.UpdateTower(upgradableTower);
+
             return FormatCommand(upgradableTower);
         }
 
-        private static void UpgradeTower(dynamic payload, ref Tower tower)
+        private static Tower UpgradeTower(dynamic payload, Tower tower)
         {
             string upgradeableTowerType = (string)payload.upgradeToType;
             Tower newTower = CreateEmptyTowerWithType(upgradeableTowerType);
@@ -32,12 +35,12 @@ namespace WeirdUnitBE.GameLogic
             newTower.owner = tower.owner;
             newTower.neighbourTowers = tower.neighbourTowers;
 
-            tower = newTower;
+            return newTower;
         }
 
         private static Tower CreateEmptyTowerWithType(string upgradableTowerType)
         {
-            var strSplitByCamelCase = SplitCamelCase(upgradableTowerType).ToArray<string>();
+            var strSplitByCamelCase = StringHelper.SplitStringByCamelCase(upgradableTowerType).ToArray<string>();
 
             string concreteFactoryType = strSplitByCamelCase[0];
             AbstractFactory towerFactory = CreateTowerFactory(concreteFactoryType);
@@ -66,27 +69,6 @@ namespace WeirdUnitBE.GameLogic
 
             return buffer;
         }
-
-        public static IEnumerable<string> SplitCamelCase(string source)
-        {
-            string pattern = UpperCaseCharRegex() + LowerCaseCharRegexRepeated();
-            var matches = Regex.Matches(source, pattern);
-            foreach (Match match in matches)
-            {
-                yield return match.Value;
-            }
-        }
-
-        public static string UpperCaseCharRegex()
-        {
-            return @"[A-Z]";
-        }
-
-        public static string LowerCaseCharRegexRepeated()
-        {
-            return @"[a-z]*";
-        }
-
     }
 }
 
