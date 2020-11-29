@@ -122,8 +122,8 @@ namespace WeirdUnitBE.Middleware
 
         private async Task SendBufferToClient(dynamic buffer, string clientId)
         {
-            WebSocket socket = _manager.GetAllSockets()[clientId];
-            await socket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+            WebSocket webSocket = _manager.GetSocketFromSocketPool(clientId);
+            await webSocket.SendAsync((byte[])buffer, WebSocketMessageType.Text, true, CancellationToken.None);
         } 
 
         private GameState GenerateGameState(string client1, string client2)
