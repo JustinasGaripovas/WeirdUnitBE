@@ -31,6 +31,11 @@ namespace WeirdUnitBE.GameLogic
             this.allPowerUpList = allPowerUps;
         }
 
+        public void UpdateTower(Tower tower)
+        {
+            PositionToTowerDict[tower.position] = tower;
+        }
+
         public void UpdateTowers(List<Tower> towers)
         {
             foreach (Tower tower in towers)
@@ -50,7 +55,7 @@ namespace WeirdUnitBE.GameLogic
             return PositionToTowerDict.Values.ToList();
         }
 
-        public List<Tower> GetAttackingTowers() { return GetAllTowers().Where(tower => tower is AttackingTower).ToList<Tower>(); }
+        public List<Tower> GetAttackingTowers() { return GetAllTowers().Where(tower => tower.GetType().BaseType.Equals(typeof(AttackingTower))).ToList<Tower>(); }
         public List<Tower> GetRegeneratingTowers() { return GetAllTowers().Where(tower => tower is RegeneratingTower).ToList<Tower>(); }
 
         public (int X, int Y) Get_MAP_DIMENSIONS()
