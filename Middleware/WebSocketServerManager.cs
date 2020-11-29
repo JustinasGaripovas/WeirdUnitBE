@@ -28,12 +28,6 @@ namespace WeirdUnitBE.Middleware
             return connID;
         }
 
-        public WebSocket GetSocketFromLobby(string connId)
-        {
-            WebSocket webSocket = _lobbySockets[connId];
-            return webSocket;
-        }
-
         public WebSocket GetSocketFromSocketPool(string connId)
         {
             WebSocket webSocket = _sockets[connId];
@@ -49,31 +43,10 @@ namespace WeirdUnitBE.Middleware
             return connId;
         }
 
-        public void AddSocketToLobbyPool(WebSocket webSocket, string connId)
-        {
-            _lobbySockets.TryAdd(connId, webSocket);
-        }
-
         public void AddClientToLobbyPool(string connId)
         {
             WebSocket webSocket = GetSocketFromSocketPool(connId);
             _lobbySockets.TryAdd(connId, webSocket);
-        }
-
-        public string AddSocket(WebSocket socket)
-        {
-            string connId = Guid.NewGuid().ToString();
-
-            _sockets.TryAdd(connId, socket);
-            AddLobbySocket(connId, socket);
-
-            Console.WriteLine("Connection Added: " + connId);
-            return connId;
-        }
-
-        private void AddLobbySocket(string connId, WebSocket socket)
-        {
-            _lobbySockets.TryAdd(connId, socket);
         }
 
         public void RemoveSocketFromAllPools(string connId)
