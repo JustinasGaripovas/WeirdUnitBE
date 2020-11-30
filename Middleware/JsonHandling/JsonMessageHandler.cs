@@ -42,8 +42,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
             }
 
             if (jsonObj.command == Constants.JsonCommands.ClientCommands.MOVE_TO)
-            {
-                
+            { 
                 await Task.Run(() => OnMoveToEvent?.Invoke(this, args));                               
                 return;
             }

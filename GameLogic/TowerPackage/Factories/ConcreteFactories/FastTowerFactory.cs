@@ -5,7 +5,7 @@ using WeirdUnitBE.GameLogic.TowerPackage.Towers.FastTowers;
 namespace WeirdUnitBE.GameLogic.TowerPackage.Factories.ConcreteFactories
 {
     class FastTowerFactory : AbstractFactory
-    {
+    {       
         public override Tower CreateAttackingTower()
         {
             return new FastAttackingTower();

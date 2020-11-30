@@ -5,10 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace WeirdUnitBE.GameLogic
-{
-    
-    
-    public class  ClassAnalyzer
+{  
+    public class ClassAnalyzer
     {
         public List<Type> GetAllLeafClasses(Type baseClass)
         {
