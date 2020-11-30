@@ -19,7 +19,7 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                         position = tower.position,
                         unitCount = tower.unitCount,
                         neighbours = tower.neighbourTowers,
-                        type = tower.type
+                        type = tower.GetType().Name
                     }
                 };
 

@@ -128,6 +128,16 @@ namespace WeirdUnitBE.GameLogic.Map
         {
             return GetDefaultMapConnections().Keys.ToList();
         }
+
+        public static (int X, int Y) GetDefaultMapDimensions()
+        {
+            return (10, 10);
+        }
+
+        public static double GetDefaultGameSpeed()
+        {
+            return 0.3;
+        }
         
         public static List<Position> GetDefaultMapWithoutInitialTowers()
         {

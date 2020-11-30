@@ -19,8 +19,7 @@ namespace WeirdUnitBE.GameLogic
 {
     public class GameState
     {
-        private readonly (int X, int Y) MAP_DIMENSIONS = (10, 10);
-        public const double GAME_SPEED = 0.3;
+        private GameStateFlyweightInfo flyweightInfo;
         public ConcurrentDictionary<Position, Tower> PositionToTowerDict { get; set; }
 
         private List<PowerUp> allPowerUpList;
@@ -58,15 +57,21 @@ namespace WeirdUnitBE.GameLogic
         public List<Tower> GetAttackingTowers() { return GetAllTowers().Where(tower => tower.GetType().BaseType.Equals(typeof(AttackingTower))).ToList<Tower>(); }
         public List<Tower> GetRegeneratingTowers() { return GetAllTowers().Where(tower => tower is RegeneratingTower).ToList<Tower>(); }
 
-        public (int X, int Y) Get_MAP_DIMENSIONS()
+        public (int X, int Y) GetMapDimensions()
         {
-            return MAP_DIMENSIONS;
+            return flyweightInfo.mapDimensions;
         }
 
         public List<PowerUp> GetAllPowerUps()
         {
             return allPowerUpList;
         }
+
+        public double GetGameSpeed()
+        {
+            return flyweightInfo.gameSpeed;
+        }
+
         #endregion
 
         #region SETTERS
@@ -75,6 +80,11 @@ namespace WeirdUnitBE.GameLogic
         {
             this.allPowerUpList = newAllPowerUps;
             return this;
+        }
+
+        public void SetFlyweightInfo(GameStateFlyweightInfo flyweightInfo)
+        {
+            this.flyweightInfo = flyweightInfo;
         }
 
         #endregion

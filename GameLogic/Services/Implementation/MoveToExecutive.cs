@@ -20,7 +20,7 @@ namespace WeirdUnitBE.GameLogic
             IMoveToStrategy strategy = DetermineStrategy(towerFrom, towerTo);
             strategy.ExecuteStrategy(towerFrom, towerTo, movingUnitCount);
 
-            int movementTimeInSeconds = CalculateMovementTimeBetweenTwoTowers(towerFrom, towerTo, GameState.GAME_SPEED);
+            int movementTimeInSeconds = CalculateMovementTimeBetweenTwoTowers(towerFrom, towerTo, gameState.GetGameSpeed());
                        
             string uuidFrom = towerFrom.owner;
 
@@ -84,14 +84,14 @@ namespace WeirdUnitBE.GameLogic
             return new SendUnitsStrategy();
         }
 
-        private static int CalculateMovementTimeBetweenTwoTowers(Tower towerFrom, Tower towerTo, double movementSpeed)
+        private int CalculateMovementTimeBetweenTwoTowers(Tower towerFrom, Tower towerTo, double movementSpeed)
         {
             var distanceBetweenTwoTowers = CalculateDistanceBetweenTwoTowers(towerTo, towerFrom);
             int movementTime = (int)(distanceBetweenTwoTowers / movementSpeed);
             return movementTime;
         }
 
-        private static double CalculateDistanceBetweenTwoTowers(Tower towerTo, Tower towerFrom)
+        private double CalculateDistanceBetweenTwoTowers(Tower towerTo, Tower towerFrom)
         {
             return towerFrom.position.DistanceToPosition(towerTo.position);
         }    

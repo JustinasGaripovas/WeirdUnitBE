@@ -17,8 +17,8 @@ namespace WeirdUnitBE.Middleware.JsonHandling
                     payload = new
                     {
                         roomId = roomId,
-                        mapX = gameState.Get_MAP_DIMENSIONS().X,
-                        mapY = gameState.Get_MAP_DIMENSIONS().Y,
+                        mapX = gameState.GetMapDimensions().X,
+                        mapY = gameState.GetMapDimensions().Y,
                         allTowers = gameState.GetAllTowers(),
                         allPowerUps = gameState.GetAllPowerUps()
                     }

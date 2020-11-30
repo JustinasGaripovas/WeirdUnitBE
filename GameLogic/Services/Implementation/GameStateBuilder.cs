@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using WeirdUnitBE.GameLogic;
 using WeirdUnitBE.GameLogic.Map;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
@@ -24,6 +25,12 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
         private ConcurrentDictionary<Position, Tower> positionToTowerDict = new ConcurrentDictionary<Position, Tower>();
 
         public GameStateBuilder() { }
+
+        public GameStateFlyweightInfo GenerateFlyweightInfo((int, int) mapDimensions, double gameSpeed)
+        {
+            GameStateFlyweightInfo flyweightInfo = GameStateFlyweightFactory.GetflyweightInfo(mapDimensions, gameSpeed);
+            return flyweightInfo;
+        }
 
         public List<PowerUp> GeneratePowerUps()
         {
@@ -61,9 +68,7 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             foreach (Position position in MapService.GetDefaultMapWithoutInitialTowers())
             {
                 Tower tower = abstractTowerFactory.CreateRegeneratingTower();
-
                 Tower neutralTowerDecorator = new NeutralTowerDecorator(tower, position);
-
                 positionToTowerDict.TryAdd(tower.position, tower);
             }
         }
@@ -74,7 +79,6 @@ namespace WeirdUnitBE.GameLogic.Services.Implementation
             {
                 Tower tower = positionToTowerDict[position];
                 Tower neighboursTowerDecorator = new NeighboursTowerDecorator(tower);
-                //tower.neighbourTowers = GetTowersFromPositions(position);
             }
         }
 
