@@ -24,6 +24,10 @@ namespace WeirdUnitBE.Middleware
             {
                 connID = _lobbySockets.FirstOrDefault().Key;
             }
+            else
+            {
+                throw new EnemyNotFoundException("Still waiting for another player to join the room...");
+            }
 
             return connID;
         }

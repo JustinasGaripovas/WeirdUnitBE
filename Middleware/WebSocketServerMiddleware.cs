@@ -71,18 +71,8 @@ namespace WeirdUnitBE.Middleware
 
         private string FindEnemyConnectionId()
         {
-            string enemyConnectionId = _manager.GetConnectionIdFromLobby();    
-            if(!EnemyFound(enemyConnectionId))
-            {
-                throw new EnemyNotFoundException("Still waiting for another player to join the room...");
-            }
-
-            return enemyConnectionId;
-        }
-
-        private static bool EnemyFound(string enemyConnectionId)
-        {
-            return enemyConnectionId != String.Empty;
+            string enemyConnectionId = _manager.GetConnectionIdFromLobby();
+            return enemyConnectionId; 
         }
 
         public async Task InitializeGameStart(string currentConnectionId, string enemyConnectionId)
