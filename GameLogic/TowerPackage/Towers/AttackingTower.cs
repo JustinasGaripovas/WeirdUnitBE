@@ -2,7 +2,7 @@ using System;
 
 namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
-    class AttackingTower : Tower
+    public class AttackingTower : Tower
     {
         
     }
