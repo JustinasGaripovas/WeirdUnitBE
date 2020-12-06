@@ -3,7 +3,7 @@ using WeirdUnitBE.GameLogic.PowerUpPackage;
 
 namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
 {
-    class TowerDefencePowerUp : PowerUp
+    public class TowerDefencePowerUp : PowerUp
     {
         public TowerDefencePowerUp()
         {

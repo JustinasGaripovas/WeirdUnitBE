@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using WeirdUnitGame.GameLogic;
 
 namespace WeirdUnitBE.GameLogic
 {
-    public abstract class HelperFacade
+    public class HelperFacade
     {
-        private Randomizer _randomizer;
-        private ClassAnalyzer _analyzer;
+        private IRandomizer _randomizer;
+        private WeirdUnitGame.GameLogic.IClassAnalyzer _analyzer;
         
-        public HelperFacade(Randomizer randomizer, ClassAnalyzer classAnalyzer)
+        public HelperFacade(IRandomizer randomizer, WeirdUnitGame.GameLogic.IClassAnalyzer classAnalyzer)
         {
             _analyzer = classAnalyzer;
             _randomizer = randomizer;
@@ -16,7 +17,7 @@ namespace WeirdUnitBE.GameLogic
 
         public int ReturnRandomInteger(int from, int to)
         {
-            return _randomizer.ReturnRandomInteger(from, to);
+            return _randomizer.ReturnRandomInteger(from, to, null);
         }
 
         public List<Type> GetAllLeafClasses(Type baseClass)

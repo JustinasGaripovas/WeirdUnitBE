@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.TowerPackage;
+using WeirdUnitGame.GameLogic;
 
 namespace WeirdUnitBE.GameLogic
 {
-    public class Randomizer
+    public class Randomizer : IRandomizer
     {
         private int _seed = DateTime.Now.Millisecond;
         public int ReturnRandomInteger(int from, int to, int? seed = null)
