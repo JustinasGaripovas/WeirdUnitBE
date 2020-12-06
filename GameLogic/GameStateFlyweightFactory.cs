@@ -26,6 +26,7 @@ namespace WeirdUnitBE.GameLogic
             if(flyweightInfo == null)
             {
                 flyweightInfo = new GameStateFlyweightInfo(mapDimensions, gameSpeed);
+
                 flyweightInfoList.Add(flyweightInfo);
             }
 

@@ -9,8 +9,7 @@ namespace WeirdUnitBE.GameLogic
 {
     public class ArrivedToExecutive : IGameStateExecutable
     {
-        public object ExecuteCommand(dynamic args, GameState gameState)
-        { 
+        public object ExecuteCommand(dynamic args, GameState gameState){ 
             // GetPayloadFromArgs
             // GetTowersFromPayload
             // GetCopyOfTower

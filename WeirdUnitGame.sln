@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeirdUnitGame", "WeirdUnitGame.csproj", "{A88F55FC-04AA-4B93-86A6-72B99CA84AC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeirdUnitGameTests", "..\WeirdUnitGameTests\WeirdUnitGameTests.csproj", "{967D0373-5D50-4EDF-A4B8-CC4D83E15A0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeirdUnitGameTests", "..\WeirdUnitGameTests\WeirdUnitGameTests.csproj", "{D8599DD7-9892-4360-A0A1-DA02EDBEFFF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{A88F55FC-04AA-4B93-86A6-72B99CA84AC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A88F55FC-04AA-4B93-86A6-72B99CA84AC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A88F55FC-04AA-4B93-86A6-72B99CA84AC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{967D0373-5D50-4EDF-A4B8-CC4D83E15A0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{967D0373-5D50-4EDF-A4B8-CC4D83E15A0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{967D0373-5D50-4EDF-A4B8-CC4D83E15A0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{967D0373-5D50-4EDF-A4B8-CC4D83E15A0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8599DD7-9892-4360-A0A1-DA02EDBEFFF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8599DD7-9892-4360-A0A1-DA02EDBEFFF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8599DD7-9892-4360-A0A1-DA02EDBEFFF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8599DD7-9892-4360-A0A1-DA02EDBEFFF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
