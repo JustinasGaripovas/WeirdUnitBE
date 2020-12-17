@@ -9,16 +9,7 @@ namespace WeirdUnitBE.GameLogic
 {
     public class ArrivedToExecutive : IGameStateExecutable
     {
-        public object ExecuteCommand(dynamic args, GameState gameState){ 
-            // GetPayloadFromArgs
-            // GetTowersFromPayload
-            // GetCopyOfTower
-            // AssignOwnerToTowerFromMemory
-            // DetermineStrategy
-            // GetMovingUnitCountFromPayload
-            // ExecuteStrategy
-            // FormatCommand
-
+        public object ExecuteCommand(dynamic args, GameState gameState){            
             dynamic payload = args.jsonObj.payload;               
             string uuidFrom = payload.uuidFrom;   
 
