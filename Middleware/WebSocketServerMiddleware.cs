@@ -27,7 +27,7 @@ namespace WeirdUnitBE.Middleware
         private WebSocketServerManager _manager;
         private ConcurrentDictionary<WebSocket, Room> socketToRoomDict = new ConcurrentDictionary<WebSocket, Room>();
         private ConcurrentDictionary<string, RoomSubject> roomIdToRoomsubjectDict = new ConcurrentDictionary<string, RoomSubject>();
-        private JsonMessageHandler jsonHandler;
+        private MoveToHandler moveToHandler;
         
         public WebSocketServerMiddleware(RequestDelegate next, WebSocketServerManager manager)
         {
@@ -127,11 +127,17 @@ namespace WeirdUnitBE.Middleware
 
         private void ConfigureEventHandler(RoomSubject roomSubject)
         {
-            jsonHandler = new JsonMessageHandler(roomSubject);
-            jsonHandler.OnMoveToEvent += HandleOnMoveToEvent;
-            jsonHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
-            jsonHandler.UpgradeTowerEvent += HandleUpgradeEvent;
-            jsonHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
+            moveToHandler = new MoveToHandler();           
+            var arrivedToHandler = new ArrivedToHandler(roomSubject);
+            var upgradeTowerHandler = new UpgradeTowerHandler();
+            var powerUpHandler = new PowerUpHandler();
+
+            moveToHandler.OnMoveToEvent += HandleOnMoveToEvent;
+            arrivedToHandler.OnArrivedToEvent += HandleOnArrivedToEvent;
+            upgradeTowerHandler.UpgradeTowerEvent += HandleUpgradeEvent;
+            powerUpHandler.OnPowerUpEvent += HandleOnPowerUpEvent;
+
+            moveToHandler.SetNext(arrivedToHandler).SetNext(upgradeTowerHandler).SetNext(powerUpHandler);           
         }
 
         private async Task BroadcastInitialGameStateToRoom(GameState gameState, string roomId)
@@ -194,7 +200,7 @@ namespace WeirdUnitBE.Middleware
             Room currentRoom = socketToRoomDict[webSocket];
             dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(stringJson);
 
-            await jsonHandler.HandleJsonMessage(currentRoom, jsonObj);
+            await moveToHandler.Handle(currentRoom, jsonObj);            
         }
 
         private string ConvertToJsonString(string stringMessage)
