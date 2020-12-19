@@ -6,10 +6,11 @@ using System.Text;
 using WeirdUnitBE.GameLogic;
 using System.Reflection;
 using WeirdUnitBE.GameLogic.Services.Interfaces;
+using WeirdUnitGame.GameLogic.Visitor;
 
 namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
-    public abstract class Tower : IPrototype
+    public abstract class Tower : IPrototype, IVisitableNode
     {
         private string _owner = String.Empty;
         public string owner
@@ -58,6 +59,11 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
                     towerPosition => new Position(towerPosition.X, towerPosition.Y)
                 );
             return newTower;
+        }
+
+        public virtual void Accept(IVisitor visitor)
+        {
+            Console.WriteLine("Initialize virtual accept (visitor)");
         }
     }
 }

@@ -77,7 +77,6 @@ namespace WeirdUnitBE.GameLogic
             for(attackingIterator.First(); !attackingIterator.IsDone(); attackingIterator.MoveNext())
             {
                 attackingTowers.Add((Tower)attackingIterator.Current());
-                
             }
 
             return attackingTowers;
