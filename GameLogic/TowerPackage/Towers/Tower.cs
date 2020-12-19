@@ -12,6 +12,8 @@ namespace WeirdUnitBE.GameLogic.TowerPackage.Towers
 {
     public abstract class Tower : IPrototype, IVisitableNode
     {
+        public float DefenceModifier { get; set; } = 1.0f;
+
         private string _owner = String.Empty;
         public string owner
         {

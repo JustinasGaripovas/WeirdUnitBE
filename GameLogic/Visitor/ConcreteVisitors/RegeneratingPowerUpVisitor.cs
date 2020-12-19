@@ -6,12 +6,12 @@ namespace WeirdUnitGame.GameLogic.Visitor.ConcreteVisitors
     {
         public void VisitAttackingTower(AttackingTower attackingTower)
         {
-            throw new System.NotImplementedException();
+            attackingTower.unitCount += 10;
         }
 
         public void VisitRegeneratingTower(RegeneratingTower regeneratingTower)
         {
-            throw new System.NotImplementedException();
+            regeneratingTower.unitCount += 20;
         }
     }
 }
