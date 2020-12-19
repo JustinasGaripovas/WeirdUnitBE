@@ -5,6 +5,6 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage
     {
         public string type;
         public string owner;
-        public abstract void printInfo(); 
+        public abstract void printInfo();
     }
 }

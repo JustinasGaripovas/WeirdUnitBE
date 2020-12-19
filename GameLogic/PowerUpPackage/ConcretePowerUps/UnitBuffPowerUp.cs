@@ -8,6 +8,6 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
         public override void printInfo()
         {
             System.Console.WriteLine("UnitBuffPowerUp Created.");
-        }     
+        }
     }
 }

@@ -25,9 +25,10 @@ namespace WeirdUnitBE.GameLogic.Strategies
             {
                 towerTo.owner = String.Empty;
             }
-            
 
-            towerTo.unitCount = Math.Abs(towerTo.unitCount - movingUnitCount);
+            var actualCount = Convert.ToInt32(towerTo.unitCount * towerTo.DefenceModifier);
+            
+            towerTo.unitCount = Math.Abs(actualCount - movingUnitCount);
 
         }
     }
