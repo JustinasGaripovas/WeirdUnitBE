@@ -9,10 +9,5 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
         {
             System.Console.WriteLine("UnitBuffPowerUp Created.");
         }
-
-        public override TowersCollection ApplyPowerUp(TowersCollection towersCollection)
-        {
-            return towersCollection;
-        }
     }
 }

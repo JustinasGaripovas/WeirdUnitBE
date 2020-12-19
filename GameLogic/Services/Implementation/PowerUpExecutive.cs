@@ -7,6 +7,8 @@ using WeirdUnitBE.GameLogic.PowerUpPackage;
 using WeirdUnitBE.GameLogic.PowerUpPackage.ConcreteCreators;
 using WeirdUnitBE.GameLogic.Strategies;
 using WeirdUnitBE.Middleware.JsonHandling;
+using WeirdUnitGame.GameLogic.Visitor;
+using WeirdUnitGame.GameLogic.Visitor.ConcreteVisitors;
 
 namespace WeirdUnitBE.GameLogic
 {
@@ -18,6 +20,9 @@ namespace WeirdUnitBE.GameLogic
         private List<Tower> targetTowers;
         PowerUpCreator powerUpCreator;
 
+        private RegeneratingPowerUpVisitor _regeneratingPowerUpVisitor = new RegeneratingPowerUpVisitor();
+        private TowerDefencePowerUpVisitor _towerDefencePowerUpVisitor = new TowerDefencePowerUpVisitor();
+        
         public object ExecuteCommand(dynamic args, GameState gameState)
         {       
             SetPayloadFromArgs(args);
@@ -65,6 +70,9 @@ namespace WeirdUnitBE.GameLogic
             strategy = new RegeneratingTowerPowerUpStrategy();
             powerUpCreator = new RegeneratingTowerPowerUpCreator();
             targetTowers = gameState.GetRegeneratingTowers().Where(tower => tower.owner == powerUpOwner).ToList();
+            
+            Console.WriteLine("We apply regenerating visitor");
+            ApplyVisitor(_regeneratingPowerUpVisitor);
         }
 
         private void ConfigureTowerDefencePowerUpExecution(string powerUpOwner, GameState gameState)
@@ -72,6 +80,9 @@ namespace WeirdUnitBE.GameLogic
             strategy = new TowerDefencePowerUpStrategy();
             powerUpCreator = new TowerDefencePowerUpCreator();
             targetTowers = gameState.GetAllTowers().Where(tower => tower.owner == powerUpOwner).ToList();
+            
+            Console.WriteLine("We apply defense visitor");
+            ApplyVisitor(_towerDefencePowerUpVisitor);
         }
 
         private void Execute()
@@ -85,6 +96,14 @@ namespace WeirdUnitBE.GameLogic
             var buffer = formatter.FormatJsonBufferFromParams(targetTowers);
 
             return buffer;  
+        }
+
+        private void ApplyVisitor(IVisitor visitor)
+        {
+            foreach (Tower tower in targetTowers)
+            {
+                tower.Accept(visitor);
+            }
         }
     }
 }

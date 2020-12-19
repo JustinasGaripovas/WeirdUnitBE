@@ -15,10 +15,5 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
         {
             System.Console.WriteLine("AttackingTowerPowerUp Created.");
         }
-
-        public override TowersCollection ApplyPowerUp(TowersCollection towersCollection)
-        {
-            return towersCollection;
-        }
     }
 }
