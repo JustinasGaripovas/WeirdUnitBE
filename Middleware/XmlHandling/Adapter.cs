@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace WeirdUnitBE.Middleware.XmlHandling
 {
-    public class Adapter
+    public class Adapter : ISubject
     {
         public string ConvertToJson(string stringMessage)
         {   
@@ -42,6 +42,12 @@ namespace WeirdUnitBE.Middleware.XmlHandling
         {
             return input.StartsWith("[") && input.EndsWith("]");
         }
+
+
+    public void Request()
+    {
+       Console.WriteLine("RealSubject: Handling Request.");
+    }
 
     }
 }

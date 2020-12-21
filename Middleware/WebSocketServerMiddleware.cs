@@ -206,7 +206,8 @@ namespace WeirdUnitBE.Middleware
         private string ConvertToJsonString(string stringMessage)
         {
             Adapter adapter = new Adapter();
-            string stringJson = adapter.ConvertToJson(stringMessage);
+            Proxy proxy = new Proxy(adapter);
+            string stringJson = proxy.stringJson(stringMessage);
 
             return stringJson;
         }
