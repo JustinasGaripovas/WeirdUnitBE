@@ -13,6 +13,7 @@ namespace WeirdUnitGame.GameLogic.State.ConcreteStates
 
         public override void Ready()
         {
+            PowerUp.TransitionTo(new ReadyState());
         }
     }
 }

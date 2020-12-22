@@ -8,6 +8,7 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
     {
         public TowerDefencePowerUp()
         {
+            executionTimeInSeconds = 8;  
             type = "TowerDefencePowerUp";
         }
         public override void printInfo()

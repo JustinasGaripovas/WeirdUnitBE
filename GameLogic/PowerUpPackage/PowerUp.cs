@@ -9,7 +9,8 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage
     {
         public string type;
         public string owner;
-        public State state = new CooldownState();
+        public int executionTimeInSeconds { get; set; } = 8;
+        public State state = new ReadyState();
         public abstract void printInfo();
         public void TransitionTo(State state)
         {

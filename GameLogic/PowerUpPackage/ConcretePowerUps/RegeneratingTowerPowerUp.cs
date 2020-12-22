@@ -10,6 +10,7 @@ namespace WeirdUnitBE.GameLogic.PowerUpPackage.ConcretePowerUps
     {
         public RegeneratingTowerPowerUp()
         {
+            executionTimeInSeconds = 3;  
             type = "RegeneratingTowerPowerUp";
         }
         public override void printInfo()
